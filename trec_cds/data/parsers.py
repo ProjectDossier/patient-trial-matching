@@ -1,7 +1,8 @@
 import os
+import re
 import xml.etree.ElementTree as ET
 from glob import glob
-from typing import List, Union
+from typing import List, Union, Tuple
 
 from trec_cds.data.clinical_trial import ClinicalTrial
 from trec_cds.data.topic import Topic
@@ -23,13 +24,82 @@ def parse_topics_from_xml(topic_file: str) -> List[Topic]:
     return topics
 
 
+def parse_criteria(criteria: str) -> Union[None, Tuple[List[str], List[str]]]:
+    exclusion = ""
+
+    inclusion_criteria_strings = [
+        "Inclusion Criteria",
+        "Inclusion criteria",
+        "Inclusive criteria",
+        "INCLUSION CRITERIA",
+    ]
+    for inclusion_criteria_string in inclusion_criteria_strings:
+        if criteria.find(inclusion_criteria_string) != -1:
+            criteria_after_split = criteria.split(inclusion_criteria_string)
+            break
+        else:
+            criteria_after_split = criteria
+
+    if len(criteria_after_split) == 2:
+        empty, tmp_inclusion = criteria_after_split
+    elif len(criteria_after_split) == 1:
+        return None
+    else:
+        return None
+
+    # if empty.strip() != "":
+    #     print('empty', empty)
+
+    exclusion_criteria_strings = [
+        "Exclusion Criteria",
+        "Exclusion criteria",
+        "Exclusive criteria",
+        "EXCLUSION CRITERIA",
+        "ECLUSION CRITERIA",
+        "EXCLUSION CRITIERIA",
+    ]
+    for exclusion_criteria_string in exclusion_criteria_strings:
+        if tmp_inclusion.find(exclusion_criteria_string) != -1:
+            inclusion_exclusion_split = tmp_inclusion.split(exclusion_criteria_string)
+            break
+        else:
+            inclusion_exclusion_split = [tmp_inclusion]
+
+    if len(inclusion_exclusion_split) == 2:
+        inclusion, exclusion = inclusion_exclusion_split
+    elif len(inclusion_exclusion_split) == 1:
+        inclusion = inclusion_exclusion_split[0]
+    else:
+        return None
+
+    inclusions = []
+    if inclusion.strip():
+        for criterion in re.split(r" - | \d\. ", inclusion):
+            if criterion.strip() and criterion.strip() != ":":
+                criterion = re.sub(r"[\r\n\t ]+", " ", criterion)
+                inclusions.append(criterion)
+    else:
+        return None
+
+    exclusions = []
+    if exclusion.strip():
+        for criterion in re.split(r" - | \d\. ", exclusion):
+            if criterion.strip() and criterion.strip() != ":":
+                criterion = re.sub(r"[\r\n\t ]+", " ", criterion)
+                exclusions.append(criterion)
+
+    return inclusions, exclusions
+
+
 def parse_clinical_trials_from_folder(
-        folder_name: str, first_n: Union[None, int] = None
+    folder_name: str, first_n: Union[None, int] = None
 ) -> List[ClinicalTrial]:
     files = [y for x in os.walk(folder_name) for y in glob(os.path.join(x[0], "*.xml"))]
 
     if first_n:
         files = files[:first_n]
+
+    total_parsed = 0
 
     clinical_trials = []
     for file in files:
@@ -57,6 +127,9 @@ def parse_clinical_trials_from_folder(
             criteria = eligibility.find("criteria")
             if criteria:
                 criteria = criteria[0].text
+                result = parse_criteria(criteria=criteria)
+                if result:
+                    total_parsed += 1
 
             gender = getattr(eligibility.find("gender"), "text", None)
             minimum_age = getattr(eligibility.find("minimum_age"), "text", None)
@@ -80,5 +153,7 @@ def parse_clinical_trials_from_folder(
             )
         except Exception as E:
             print(file, E)
+
+    print(f"percentage of successfully parsed criteria : {total_parsed / len(files)}")
 
     return clinical_trials
