@@ -3,6 +3,37 @@ TREC-cds
 
 TU Wien @ TREC 2021 Clinical Trials Task
 
+
+## Installation
+
+Install requirements with:
+
+```bash
+$ pip install -r requirements.txt 
+```
+
+This will install all required packages and also this project in a devel mode.
+
+
+## Data
+
+Data from TREC-CDS is stored in `data/external` directory. It contains:
+
+* `topics2021.xml` file with 75 patients' data
+* 5 .zip files with ClinicalTrials data
+
+ClinicalTrials are stored with [git LFS](https://git-lfs.github.com) and after downloading should be extracted into `data/external/ClinicalTrials/` folder.
+
+
+## Usage
+
+After successful installation and configuration of the datasets just run:
+
+```bash
+$ python trec_cds/main.py
+```
+
+
 Project Organization
 ------------
 
