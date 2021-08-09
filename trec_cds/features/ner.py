@@ -4,14 +4,19 @@ import json
 import random
 from trec_cds.data.parsers import parse_topics_from_xml
 
-with open("data/raw/label_config.json", 'r') as json_file:
+with open("data/raw/label_config.json", "r") as json_file:
     labels = json.load(json_file)
 
 # colors = {label['text'] : f"linear-gradient(90deg, {'#' + ''.join([random.choice('ABCDEF0123456789') for i in range(6)])}," \
 #                           f"{'#' + ''.join([random.choice('ABCDEF0123456789') for i in range(6)])})" for label in labels}
-colors = {label['text'] : f"{'#' + ''.join([random.choice('ABCDEF3456789') for i in range(6)])}" for label in labels}
+colors = {
+    label[
+        "text"
+    ]: f"{'#' + ''.join([random.choice('ABCDEF3456789') for i in range(6)])}"
+    for label in labels
+}
 
-options = {"ents": [label['text'] for label in labels], "colors": colors}
+options = {"ents": [label["text"] for label in labels], "colors": colors}
 
 
 # colors = {
