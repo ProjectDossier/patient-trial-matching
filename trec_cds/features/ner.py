@@ -1,15 +1,26 @@
 import spacy
 from spacy import displacy
-
+import json
+import random
 from trec_cds.data.parsers import parse_topics_from_xml
 
-colors = {
-    "DISEASE": "linear-gradient(90deg, #aa9cfc, #fc9ce7)",
-    "CHEMICAL": "linear-gradient(90deg, #21fc3c, #ddcce7)",
-    "AGE": "linear-gradient(90deg, #413cec, #4480e7)",
-    "Gender": "linear-gradient(90deg, #f1dc3c, #9d3c47)",
-}
-options = {"ents": ["DISEASE", "CHEMICAL", "AGE", "Gender"], "colors": colors}
+with open("data/raw/label_config.json", 'r') as json_file:
+    labels = json.load(json_file)
+
+# colors = {label['text'] : f"linear-gradient(90deg, {'#' + ''.join([random.choice('ABCDEF0123456789') for i in range(6)])}," \
+#                           f"{'#' + ''.join([random.choice('ABCDEF0123456789') for i in range(6)])})" for label in labels}
+colors = {label['text'] : f"{'#' + ''.join([random.choice('ABCDEF3456789') for i in range(6)])}" for label in labels}
+
+options = {"ents": [label['text'] for label in labels], "colors": colors}
+
+
+# colors = {
+#     "DISEASE": "linear-gradient(90deg, #aa9cfc, #fc9ce7)",
+#     "CHEMICAL": "linear-gradient(90deg, #21fc3c, #ddcce7)",
+#     "AGE": "linear-gradient(90deg, #413cec, #4480e7)",
+#     "GENDER": "linear-gradient(90deg, #f1dc3c, #9d3c47)",
+# }
+# options = {"ents": ["DISEASE", "CHEMICAL", "AGE", "GENDER"], "colors": colors}
 
 
 def load_model(model_dir="models/ner_age_gender/"):
@@ -65,6 +76,7 @@ if __name__ == "__main__":
 
     from pathlib import Path
 
+    # displacy.serve(docs, style="ent")
     displacy.serve(docs, style="ent", options=options)
 
     svg = displacy.render(docs, style="ent", options=options)

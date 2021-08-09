@@ -4,6 +4,8 @@ from pathlib import Path
 
 import spacy
 from spacy.training.example import Example
+import numpy as np
+
 
 def train_age_gender_model() -> spacy:
     nlp = spacy.load("en_core_web_sm")
@@ -11,13 +13,19 @@ def train_age_gender_model() -> spacy:
     # Getting the pipeline component
     ner = nlp.get_pipe("ner")
 
-    with open("data/raw/d13asfwqUIer121213-old.jsonl", "r") as json_file:
+    with open("data/raw/d13asfwqUIer121213.jsonl", "r") as json_file:
         training_data = [json.loads(jline) for jline in json_file.readlines()]
 
     print(training_data)
 
-    ner.add_label("Gender")
-    ner.add_label("AGE")
+    with open("data/raw/label_config.json", 'r') as json_file:
+        labels = json.load(json_file)
+
+    # labels = json.loads()
+    for label in labels:
+        print(label['text'])
+        ner.add_label(label['text'])
+    # ner.add_label("AGE")
 
     pipe_exceptions = ["ner", "trf_wordpiecer", "trf_tok2vec"]
     unaffected_pipes = [pipe for pipe in nlp.pipe_names if pipe not in pipe_exceptions]
@@ -26,28 +34,36 @@ def train_age_gender_model() -> spacy:
     # training data
 
     for x in training_data:
-        TRAIN_DATA.append((x["text"], {"entities.txt": x["label"]}))
+        TRAIN_DATA.append((x["data"], {"entities": x["label"]}))
 
     # TRAINING THE MODEL
+    train_loss = []
     with nlp.disable_pipes(*unaffected_pipes):
 
         # Training for 30 iterations
-        for iteration in range(15):
-            print(iteration)
+        for iteration in range(23):
+            iter_loss = []
 
             # shuufling examples  before every iteration
             random.shuffle(TRAIN_DATA)
             losses = {}
 
-            for batch in spacy.util.minibatch(TRAIN_DATA, size=8):
+            for batch in spacy.util.minibatch(TRAIN_DATA, size=2):
                 for text, annotations in batch:
                     # create Example
                     doc = nlp.make_doc(text)
+                    # print(annotations)
                     example = Example.from_dict(doc, annotations)
                     # Update the model
                     nlp.update([example], losses=losses, drop=0.5)
-                print("Losses", losses)
+                # print("Losses", losses)
+                iter_loss.append(losses['ner'])
 
+            train_loss.append(np.mean(iter_loss))
+            print(f"iteration: {iteration} - {np.mean(iter_loss)}")
+
+
+    print(train_loss)
     # Save the  model to directory
     output_dir = Path("models/ner_age_gender/")
     nlp.to_disk(output_dir)
