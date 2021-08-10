@@ -21,18 +21,15 @@ def train_age_gender_model() -> spacy:
     with open("data/raw/label_config.json", "r") as json_file:
         labels = json.load(json_file)
 
-    # labels = json.loads()
     for label in labels:
         print(label["text"])
         ner.add_label(label["text"])
-    # ner.add_label("AGE")
 
     pipe_exceptions = ["ner", "trf_wordpiecer", "trf_tok2vec"]
     unaffected_pipes = [pipe for pipe in nlp.pipe_names if pipe not in pipe_exceptions]
 
-    TRAIN_DATA = []
     # training data
-
+    TRAIN_DATA = []
     for x in training_data:
         TRAIN_DATA.append((x["data"], {"entities": x["label"]}))
 
@@ -48,11 +45,11 @@ def train_age_gender_model() -> spacy:
             random.shuffle(TRAIN_DATA)
             losses = {}
 
-            for batch in spacy.util.minibatch(TRAIN_DATA, size=2):
+            for batch in spacy.util.minibatch(TRAIN_DATA, size=8):
                 for text, annotations in batch:
                     # create Example
                     doc = nlp.make_doc(text)
-                    # print(annotations)
+
                     example = Example.from_dict(doc, annotations)
                     # Update the model
                     nlp.update([example], losses=losses, drop=0.5)
