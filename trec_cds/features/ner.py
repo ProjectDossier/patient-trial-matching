@@ -1,67 +1,36 @@
-import spacy
-from spacy import displacy
 import json
 import random
+from pathlib import Path
+import re
+
+import spacy
+from spacy import displacy
+
 from trec_cds.data.parsers import parse_topics_from_xml
-
-with open("data/raw/label_config.json", "r") as json_file:
-    labels = json.load(json_file)
-
-# colors = {label['text'] : f"linear-gradient(90deg, {'#' + ''.join([random.choice('ABCDEF0123456789') for i in range(6)])}," \
-#                           f"{'#' + ''.join([random.choice('ABCDEF0123456789') for i in range(6)])})" for label in labels}
-colors = {
-    label[
-        "text"
-    ]: f"{'#' + ''.join([random.choice('ABCDEF3456789') for i in range(6)])}"
-    for label in labels
-}
-
-options = {"ents": [label["text"] for label in labels], "colors": colors}
+from trec_cds.data.utils import Gender
 
 
-# colors = {
-#     "DISEASE": "linear-gradient(90deg, #aa9cfc, #fc9ce7)",
-#     "CHEMICAL": "linear-gradient(90deg, #21fc3c, #ddcce7)",
-#     "AGE": "linear-gradient(90deg, #413cec, #4480e7)",
-#     "GENDER": "linear-gradient(90deg, #f1dc3c, #9d3c47)",
-# }
-# options = {"ents": ["DISEASE", "CHEMICAL", "AGE", "GENDER"], "colors": colors}
+def get_displacy_params():
+    with open("data/raw/label_config.json", "r") as json_file:
+        labels = json.load(json_file)
+
+    colors = {
+        label[
+            "text"
+        ]: f"{'#' + ''.join([random.choice('3456789ABCDEF') for i in range(6)])}"
+        for label in labels
+    }
+
+    options = {"ents": [label["text"] for label in labels], "colors": colors}
+    return options
 
 
-def load_model(model_dir="models/ner_age_gender/"):
-    print("Loading from", model_dir)
-    return spacy.load(model_dir)
-
-
-if __name__ == "__main__":
+def get_ner_model():
     nlp = spacy.load("en_ner_bc5cdr_md")
-    text = """
-    Myeloid derived suppressor cells (MDSC) are immature 
-    myeloid cells with immunosuppressive activity. 
-    They accumulate in tumor-bearing mice and humans 
-    with different types of cancer, including hepatocellular 
-    carcinoma (HCC).
-    """
-    doc = nlp(text)
 
-    print(doc)
-    # displacy.serve(doc, style="ent")
-    # displacy.serve(doc, style="ent", options=options)
+    model_dir = "models/ner_age_gender/"
+    age_gender_nlp = spacy.load(model_dir)
 
-    print(list(doc.sents))
-
-    print(doc.ents)
-    for ent in doc.ents:
-        print(ent.text, ent.start_char, ent.end_char, ent.label_)
-
-    import spacy
-
-    age_gender_nlp = load_model()
-    # give this component a copy of its own tok2vec
-    # age_gender_nlp.replace_listeners("tok2vec", "ner", ["model.tok2vec"])
-
-    # now you can put the drug component before or after the other ner
-    # This will print a W113 warning but it's safe to ignore here
     nlp.add_pipe(
         "ner",
         name="ner_age_gender",
@@ -69,8 +38,39 @@ if __name__ == "__main__":
         after="ner",
     )
 
+    return nlp
+
+
+def extract_age(text):
+    match = re.search(r"\d{1,2}", text)
+    if match is not None:
+        return match.group(0)
+    else:
+        return None
+
+
+def extract_gender(text):
+    male = ['M', 'male', 'boy', 'man', 'gentleman']
+    female = ['F', 'female', 'girl', 'woman']
+
+    for pattern in male:
+        match = re.search(rf"\b{pattern}\b", text)
+        if match is not None:
+            return Gender.male
+
+    for pattern in female:
+        match = re.search(rf"\b{pattern}\b", text)
+        if match is not None:
+            return Gender.female
+
+    return Gender.unknown
+
+
+if __name__ == "__main__":
     topic_file = "data/external/topics2021.xml"
     topics = parse_topics_from_xml(topic_file)
+
+    nlp = get_ner_model()
 
     docs = []
     for topic in topics:
@@ -79,7 +79,7 @@ if __name__ == "__main__":
         for ent in doc.ents:
             print(ent.text, ent.start_char, ent.end_char, ent.label_)
 
-    from pathlib import Path
+    options = get_displacy_params()
 
     # displacy.serve(docs, style="ent")
     displacy.serve(docs, style="ent", options=options)

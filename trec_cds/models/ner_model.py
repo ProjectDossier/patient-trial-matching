@@ -2,9 +2,9 @@ import json
 import random
 from pathlib import Path
 
+import numpy as np
 import spacy
 from spacy.training.example import Example
-import numpy as np
 
 
 def train_age_gender_model() -> spacy:
