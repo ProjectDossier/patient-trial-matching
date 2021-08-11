@@ -53,7 +53,31 @@ def get_ner_model(
     return base_nlp
 
 
-def extract_age(text: str) -> int:
+class EntityRecognition:
+    def __init__(self, custom_ner_model_path: str = "models/ner_age_gender/"):
+        self.nlp = get_ner_model(custom_ner_model_path=custom_ner_model_path)
+        print("loaded spacy language model for entity detection")
+
+    def predict(self, topics):
+        for topic in topics:
+            doc = self.nlp(topic.text)
+
+            age_entities = [ent.text for ent in doc.ents if ent.label_ == "AGE"]
+            if len(age_entities) > 0:
+                topic.age = extract_age_from_entity(age_entities[0])
+            else:
+                topic.age = -1
+
+            gender_entities = [ent.text for ent in doc.ents if ent.label_ == "GENDER"]
+            if len(gender_entities) > 0:
+                topic.gender = extract_gender_from_entity(gender_entities[0])
+            else:
+                topic.gender = extract_gender_from_text(topic.text)
+
+        return topics
+
+
+def extract_age_from_entity(text: str) -> int:
     """Extracts age from candidate string coming from AGE entity in spacy NER model
     TODO: add handling of /-day-old, -month-old/
     :param text: string containing entity containing age candidate
@@ -66,7 +90,7 @@ def extract_age(text: str) -> int:
         return -1
 
 
-def extract_gender(text: str) -> Gender:
+def extract_gender_from_entity(text: str) -> Gender:
     """Extracts gender from candidate string coming from GENDER entity in spacy NER model
 
     :param text: string containing entity containing gender candidate
@@ -89,6 +113,11 @@ def extract_gender(text: str) -> Gender:
 
 
 def extract_gender_from_text(text: str) -> Gender:
+    """Simple heuristic to estimate the gender based on count of a female/male pronouns in a text.
+
+    :param text:
+    :return:
+    """
     male_pronoun = "he"
     female_pronoun = "she"
 
