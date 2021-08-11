@@ -76,23 +76,38 @@ def extract_gender(text: str) -> Gender:
     female = ["F", "female", "girl", "woman", "lady"]
 
     for pattern in male:
-        match = re.search(rf"\b{pattern}\b", text)
+        match = re.search(rf"\b{pattern}\b", text, re.IGNORECASE)
         if match is not None:
             return Gender.male
 
     for pattern in female:
-        match = re.search(rf"\b{pattern}\b", text)
+        match = re.search(rf"\b{pattern}\b", text, re.IGNORECASE)
         if match is not None:
             return Gender.female
 
     return Gender.unknown
 
 
+def extract_gender_from_text(text: str) -> Gender:
+    male_pronoun = "he"
+    female_pronoun = "she"
+
+    male_matches = re.findall(rf"\b{male_pronoun}\b", text, re.IGNORECASE)
+    female_matches = re.findall(rf"\b{female_pronoun}\b", text, re.IGNORECASE)
+
+    if male_matches > female_matches:
+        return Gender.male
+    elif male_matches < female_matches:
+        return Gender.female
+    else:
+        return Gender.unknown
+
+
 if __name__ == "__main__":
     topic_file = "data/external/topics2021.xml"
     topics = parse_topics_from_xml(topic_file)
 
-    nlp = get_ner_model()
+    nlp = get_ner_model(custom_ner_model_path="models/ner_age_gender")
 
     docs = []
     for topic in topics:

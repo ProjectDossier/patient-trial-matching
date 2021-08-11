@@ -50,6 +50,7 @@ def train_age_gender_model() -> spacy:
                     # create Example
                     doc = nlp.make_doc(text)
 
+                    # print(spacy.training.offsets_to_biluo_tags(nlp.make_doc(text), annotations))
                     example = Example.from_dict(doc, annotations)
                     # Update the model
                     nlp.update([example], losses=losses, drop=0.5)

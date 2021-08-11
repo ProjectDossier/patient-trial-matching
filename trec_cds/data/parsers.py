@@ -19,7 +19,7 @@ def parse_topics_from_xml(topic_file: str) -> List[Topic]:
     topics = []
     for elem in root:
         topics.append(
-            Topic(number=elem.attrib["number"], text=elem.text, gender="", age="")
+            Topic(number=elem.attrib["number"], text=elem.text)
         )
 
     return topics
