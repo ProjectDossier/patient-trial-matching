@@ -37,6 +37,7 @@ def parse_clinical_trials_from_folder(
         root = tree.getroot()
 
         org_study_id = getattr(root.find("id_info").find("org_study_id"), "text", None)
+        nct_id = getattr(root.find("id_info").find("nct_id"), "text", None)
 
         brief_summary = root.find("brief_summary")
         if brief_summary:
@@ -69,6 +70,7 @@ def parse_clinical_trials_from_folder(
             clinical_trials.append(
                 ClinicalTrial(
                     org_study_id=org_study_id,
+                    nct_id=nct_id,
                     summary=brief_summary,
                     description=description,
                     criteria=criteria,

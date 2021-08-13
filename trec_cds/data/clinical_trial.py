@@ -2,6 +2,7 @@ class ClinicalTrial:
     def __init__(
         self,
         org_study_id,
+        nct_id,
         summary,
         description,
         criteria,
@@ -11,6 +12,7 @@ class ClinicalTrial:
         healthy_volunteers,
     ):
         self.org_study_id = org_study_id
+        self.nct_id = nct_id
         self.summary = summary
         self.description = description
 

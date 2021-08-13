@@ -136,7 +136,7 @@ if __name__ == "__main__":
     topic_file = "data/external/topics2021.xml"
     topics = parse_topics_from_xml(topic_file)
 
-    nlp = get_ner_model(custom_ner_model_path="models/ner_age_gender")
+    nlp = get_ner_model(custom_ner_model_path="models/ner_age_gender-new")
 
     docs = []
     for topic in topics:
