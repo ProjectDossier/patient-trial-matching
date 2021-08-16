@@ -24,7 +24,7 @@ def parse_topics_from_xml(topic_file: str) -> List[Topic]:
 
 
 def parse_clinical_trials_from_folder(
-        folder_name: str, first_n: Union[None, int] = None
+    folder_name: str, first_n: Union[None, int] = None
 ) -> List[ClinicalTrial]:
     files = [y for x in os.walk(folder_name) for y in glob(os.path.join(x[0], "*.xml"))]
 

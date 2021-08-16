@@ -33,6 +33,39 @@ After successful installation and configuration of the datasets just run:
 $ python trec_cds/main.py
 ```
 
+## Text annotations for named entities
+
+Annotation schema 0.1.0
+
+- Age (Numerical)
+- Gender (M / F / O)
+- Disease
+- Chemical  (Drugs, etc.)
+- Dosage (relation with Chemical, also duration?)
+- Examination (CT / MR / etc.)
+- Examination results (relation with EXA)
+- Procedure (Surgery)
+- Symptom 
+- Ethnicity 
+
+others for consideration:
+
+- Healthiness ? ("healthy")
+- Date
+
+
+### Acronyms used in text
+
+- h/o - history of
+- S/P - Told Stimulant/Got Placebo
+- w/ - with
+- w/o - without
+- Pt - patient
+- Tx - treatment, therapy, ?transfer?
+- XRT - radiotherapy
+- CXR - chest X-ray
+- SOB - shortness of breath
+
 
 Project Organization
 ------------
