@@ -1,10 +1,11 @@
+from typing import Union
+
 from trec_cds.data.utils import Gender
-from datetime import datetime
 
 
 class Topic:
     gender: Gender
-    age: datetime
+    age: Union[int, float, None]
     healthy: bool
 
     def __init__(self, number, text):

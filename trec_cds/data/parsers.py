@@ -1,9 +1,9 @@
+import logging
 import os
 import re
 import xml.etree.ElementTree as ET
 from glob import glob
 from typing import List, Union, Tuple
-from datetime import datetime
 
 from trec_cds.data.clinical_trial import ClinicalTrial
 from trec_cds.data.topic import Topic
@@ -108,14 +108,6 @@ def parse_criteria(criteria: str) -> Union[None, Tuple[List[str], List[str]]]:
     return inclusions, exclusions
 
 
-def _search_age_string(
-    age_string: str, keyword: str, conversion_factor_to_years=1
-) -> float:
-    match = re.search(rf"(\d{1,2}) {keyword}[s]?", age_string)
-    if match is not None:
-        return int(match.group(1)) / conversion_factor_to_years
-
-
 def parse_age(age_string: str) -> Union[int, float, None]:
     if age_string:
         if age_string in ["N/A", "None"]:
@@ -144,9 +136,9 @@ def parse_age(age_string: str) -> Union[int, float, None]:
         match = re.search(r"(\d{1,2}) Minute[s]?", age_string)
         if match is not None:
             return int(match.group(1)) / 525960
-        else:
-            print("a", age_string)
-            return -1
+
+        logging.warning("couldn't parse ag from %s", age_string)
+        return None
     else:
         return None
 
