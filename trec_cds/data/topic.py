@@ -8,9 +8,9 @@ class Topic:
     age: Union[int, float, None]
     healthy: bool
 
-    def __init__(self, number, text):
-        self.number = number
-        self.text = text
+    def __init__(self, number: int, text: str):
+        self.number: int = number
+        self.text: str = text
 
 
 # from collections import namedtuple

@@ -1,13 +1,13 @@
+import pickle
+
+import spacy
+import tqdm
 from rank_bm25 import BM25Okapi
+
 from trec_cds.data.parsers import (
     parse_clinical_trials_from_folder,
-    parse_topics_from_xml,
+    load_topics_from_xml,
 )
-import spacy
-import pickle
-import tqdm
-import numpy as np
-
 
 corpus = [
     "Hello there good man!",
@@ -53,7 +53,7 @@ if __name__ == "__main__":
     pickle.dump(bm25, open("models/bm25.p", "wb"))
 
     topic_file = "data/external/topics2021.xml"
-    topics = parse_topics_from_xml(topic_file)
+    topics = load_topics_from_xml(topic_file)
 
     for topic in topics[:3]:
         doc = nlp(topic.text)

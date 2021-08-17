@@ -7,7 +7,7 @@ from typing import List, Dict, Union
 import spacy
 from spacy import displacy
 
-from trec_cds.data.parsers import parse_topics_from_xml
+from trec_cds.data.parsers import load_topics_from_xml
 from trec_cds.data.utils import Gender
 
 
@@ -141,7 +141,7 @@ def extract_gender_from_text(text: str) -> Gender:
 
 if __name__ == "__main__":
     TOPIC_FILE = "data/external/topics2021.xml"
-    topics = parse_topics_from_xml(TOPIC_FILE)
+    topics = load_topics_from_xml(TOPIC_FILE)
 
     nlp = get_ner_model(custom_ner_model_path="models/ner_age_gender-new")
 

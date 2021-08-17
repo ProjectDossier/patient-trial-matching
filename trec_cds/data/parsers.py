@@ -10,7 +10,7 @@ from trec_cds.data.topic import Topic
 from trec_cds.data.utils import Gender
 
 
-def parse_topics_from_xml(topic_file: str) -> List[Topic]:
+def load_topics_from_xml(topic_file: str) -> List[Topic]:
     """Parses topics from single XML file and creates a Topic class instance for each parsed item.
 
     :param topic_file: str
@@ -141,8 +141,8 @@ def parse_age(age_string: str) -> Union[int, float, None]:
 
         logging.warning("couldn't parse ag from %s", age_string)
         return None
-    else:
-        return None
+
+    return None
 
 
 def parse_gender(gender_string: Union[str, None]) -> Gender:
