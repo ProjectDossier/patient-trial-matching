@@ -7,7 +7,7 @@ class ClinicalTrial:
     """ClinicalTrial is a wrapper class that contains most important fields
     from the ClicnialTrials xml dump file."""
 
-    text: str
+    text_preprocessed: List[str]  # text which was preprocessed and is already tokenized
 
     def __init__(
             self,
@@ -24,6 +24,7 @@ class ClinicalTrial:
             minimum_age: Union[int, float, None],
             maximum_age: Union[int, float, None],
             healthy_volunteers: bool,
+            text: str,
     ):
         self.org_study_id: str = org_study_id
         self.nct_id: str = nct_id  # primary id
@@ -42,3 +43,5 @@ class ClinicalTrial:
         self.minimum_age: Union[int, float, None] = minimum_age
         self.maximum_age: Union[int, float, None] = maximum_age
         self.healthy_volunteers: bool = healthy_volunteers  # True means accept healthy
+
+        self.text: str = text

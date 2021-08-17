@@ -11,7 +11,8 @@ from trec_cds.data.utils import Gender
 
 
 def load_topics_from_xml(topic_file: str) -> List[Topic]:
-    """Parses topics from single XML file and creates a Topic class instance for each parsed item.
+    """Parses topics from single XML file and creates a Topic class instance for
+    each parsed item.
 
     :param topic_file: str
     :return: List of topics
@@ -35,7 +36,8 @@ def safe_get_item(item_name: str, root: ET) -> str:
 
 
 def parse_criteria(criteria: str) -> Union[None, Tuple[List[str], List[str]]]:
-    """Tries to parse the criteria xml element to find and extract inclusion and exclusion criteria for a study.
+    """Tries to parse the criteria xml element to find and extract inclusion and
+    exclusion criteria for a study.
     It uses heuristics defined based on the dataset:
     - incl/excl criteria start with a header and are sorted inclusion first,
     - every criterion starts from a newline with a number or a '-' character.
@@ -162,7 +164,9 @@ def parse_health_status(healthy_volunteers: Union[str, None]) -> bool:
     elif healthy_volunteers == "No":
         return False
     else:
-        return True  # no data to exclude so we assume that it is possible to also include healthy
+        # if there is no data to exclude a patient we assume
+        # that it is possible to include healthy
+        return True
 
 
 def parse_clinical_trials_from_folder(
@@ -198,11 +202,11 @@ def parse_clinical_trials_from_folder(
         exclusion = []
         eligibility = root.find("eligibility")
         if not eligibility:
-            criteria = None
-            gender = None
-            minimum_age = None
-            maximum_age = None
-            healthy_volunteers = None
+            criteria = ""
+            gender = ""
+            minimum_age = ""
+            maximum_age = ""
+            healthy_volunteers = ""
         else:
             criteria = eligibility.find("criteria")
             if criteria:
@@ -225,6 +229,10 @@ def parse_clinical_trials_from_folder(
         maximum_age = parse_age(maximum_age)
         healthy_volunteers = parse_health_status(healthy_volunteers)
 
+        text: str = brief_title + official_title + brief_summary + criteria
+        if text.strip() == "":
+            text = "empty"
+
         clinical_trials.append(
             ClinicalTrial(
                 org_study_id=org_study_id,
@@ -240,6 +248,7 @@ def parse_clinical_trials_from_folder(
                 exclusion=exclusion,
                 brief_title=brief_title,
                 official_title=official_title,
+                text=text,
             )
         )
 

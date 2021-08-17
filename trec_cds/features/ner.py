@@ -12,9 +12,10 @@ from trec_cds.data.utils import Gender
 
 
 def get_displacy_options(
-    label_file: str = "data/raw/label_config.json",
+        label_file: str = "data/raw/label_config.json",
 ) -> Dict[str, List]:
-    """Loads labels from a label file and creates a options dict with labels colours that will be used by spacy.displacy
+    """Loads labels from a label file and creates a options dict with labels
+    colours that will be used by spacy.displacy
 
     :param label_file: path to a file containing NER labels
     :return:
@@ -33,9 +34,10 @@ def get_displacy_options(
 
 
 def get_ner_model(
-    custom_ner_model_path: str = "models/ner_age_gender/",
+        custom_ner_model_path: str = "models/ner_age_gender/",
 ) -> spacy.Language:
-    """Load Named Entity Recognition spacy model that combines pre-trained en_ner_bc5cdr_md for Disease and Chemical
+    """Load Named Entity Recognition spacy model that combines pre-trained
+    en_ner_bc5cdr_md for Disease and Chemical
     prediction with a custom model trained on topics corpora.
 
     :return: spacy NER model
@@ -98,7 +100,8 @@ def extract_age_from_entity(text: str) -> Union[int, float, None]:
 
 
 def extract_gender_from_entity(text: str) -> Gender:
-    """Extracts gender from candidate string coming from GENDER entity in spacy NER model
+    """Extracts gender from candidate string coming from GENDER entity in
+     spacy NER model.
 
     :param text: string containing entity containing gender candidate
     :return: Gender
@@ -120,7 +123,8 @@ def extract_gender_from_entity(text: str) -> Gender:
 
 
 def extract_gender_from_text(text: str) -> Gender:
-    """Simple heuristic to estimate the gender based on count of a female/male pronouns in a text.
+    """Simple heuristic to estimate the gender based on count of a female/male
+    pronouns in a text.
 
     :param text:
     :return:
