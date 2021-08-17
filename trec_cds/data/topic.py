@@ -1,9 +1,11 @@
 from trec_cds.data.utils import Gender
+from datetime import datetime
 
 
 class Topic:
     gender: Gender
-    age: int
+    age: datetime
+    healthy: bool
 
     def __init__(self, number, text):
         self.number = number

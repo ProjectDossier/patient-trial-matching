@@ -3,10 +3,11 @@ import re
 import xml.etree.ElementTree as ET
 from glob import glob
 from typing import List, Union, Tuple
+from datetime import datetime
 
 from trec_cds.data.clinical_trial import ClinicalTrial
 from trec_cds.data.topic import Topic
-
+from trec_cds.data.utils import Gender
 
 def parse_topics_from_xml(topic_file: str) -> List[Topic]:
     """Parses topics from single XML file and creates a Topic class instance for each parsed item.
@@ -24,9 +25,23 @@ def parse_topics_from_xml(topic_file: str) -> List[Topic]:
     return topics
 
 
-def parse_criteria(criteria: str) -> Union[None, Tuple[List[str], List[str]]]:
-    exclusion = ""
+def safe_get_item(item_name:str, root:ET) -> str:
+    item = root.find(item_name)
+    if item:
+        return item.text
+    else:
+        return ""
 
+
+def parse_criteria(criteria: str) -> Union[None, Tuple[List[str], List[str]]]:
+    """Tries to parse the criteria xml element to find and extract inclusion and exclusion criteria for a study.
+    It uses heuristics defined based on the dataset:
+    - incl/excl criteria start with a header and are sorted inclusion first,
+    - every criterion starts from a newline with a number or a '-' character.
+
+    :param criteria:
+    :return: if couldn't find any criteria returns None
+    """
     inclusion_criteria_strings = [
         "Inclusion Criteria",
         "Inclusion criteria",
@@ -65,6 +80,7 @@ def parse_criteria(criteria: str) -> Union[None, Tuple[List[str], List[str]]]:
         else:
             inclusion_exclusion_split = [tmp_inclusion]
 
+    exclusion = ""
     if len(inclusion_exclusion_split) == 2:
         inclusion, exclusion = inclusion_exclusion_split
     elif len(inclusion_exclusion_split) == 1:
@@ -89,6 +105,59 @@ def parse_criteria(criteria: str) -> Union[None, Tuple[List[str], List[str]]]:
                 exclusions.append(criterion)
 
     return inclusions, exclusions
+
+
+def _search_age_string(age_string:str, keyword:str, conversion_factor_to_years = 1) -> float:
+    match = re.search(rf"(\d{1,2}) {keyword}[s]?", age_string)
+    if match is not None:
+        return int(match.group(1)) / conversion_factor_to_years
+
+
+def parse_age(age_string:str) -> Union[int, float, None]:
+    if age_string:
+        if age_string in ["N/A", 'None']:
+            return None
+
+        match = re.search(r"(\d{1,2}) Year[s]?", age_string)
+        if match is not None:
+            return int(match.group(1))
+
+        match = re.search(r"(\d{1,2}) Month[s]?", age_string)
+        if match is not None:
+            return int(match.group(1)) / 12
+
+        match = re.search(r"(\d{1,2}) Week[s]?", age_string)
+        if match is not None:
+            return int(match.group(1)) / 52
+
+        match = re.search(r"(\d{1,2}) Day[s]?", age_string)
+        if match is not None:
+            return int(match.group(1)) / 365
+
+        match = re.search(r"(\d{1,2}) Hour[s]?", age_string)
+        if match is not None:
+            return int(match.group(1)) / 8766
+
+        match = re.search(r"(\d{1,2}) Minute[s]?", age_string)
+        if match is not None:
+            return int(match.group(1)) / 525960
+        else:
+            print('a', age_string)
+            return -1
+    else:
+        return None
+
+
+def parse_gender(gender_string:Union[str, None]) -> Gender:
+    if gender_string == 'All':
+        return Gender.all
+    elif gender_string == 'Male':
+        return Gender.male
+    elif gender_string == 'Female':
+        return Gender.female
+    else:
+        print(gender_string)
+        return Gender.unknown
 
 
 def parse_clinical_trials_from_folder(
@@ -117,6 +186,11 @@ def parse_clinical_trials_from_folder(
         if description:
             description = description[0].text
 
+        brief_title = safe_get_item(item_name="brief_title", root=root)
+        official_title = safe_get_item(item_name="official_title", root=root)
+
+        inclusion = []
+        exclusion = []
         eligibility = root.find("eligibility")
         if not eligibility:
             criteria = None
@@ -131,6 +205,8 @@ def parse_clinical_trials_from_folder(
                 result = parse_criteria(criteria=criteria)
                 if result:
                     total_parsed += 1
+                    inclusion = result[0]
+                    exclusion = result[1]
 
             gender = getattr(eligibility.find("gender"), "text", None)
             minimum_age = getattr(eligibility.find("minimum_age"), "text", None)
@@ -138,6 +214,12 @@ def parse_clinical_trials_from_folder(
             healthy_volunteers = getattr(
                 eligibility.find("healthy_volunteers"), "text", None
             )
+
+        parse_gender(gender)
+        print(parse_age(minimum_age))
+        # print(nct_id)
+        parse_age(maximum_age)
+
 
         try:
             clinical_trials.append(
@@ -151,6 +233,10 @@ def parse_clinical_trials_from_folder(
                     minimum_age=minimum_age,
                     maximum_age=maximum_age,
                     healthy_volunteers=healthy_volunteers,
+                    inclusion=inclusion,
+                    exclusion=exclusion,
+                    brief_title=brief_title,
+                    official_title=official_title
                 )
             )
         except Exception as E:
