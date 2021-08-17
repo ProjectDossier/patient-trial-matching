@@ -1,4 +1,7 @@
-from trec_cds.data.parsers import parse_topics_from_xml, parse_clinical_trials_from_folder
+from trec_cds.data.parsers import (
+    parse_topics_from_xml,
+    parse_clinical_trials_from_folder,
+)
 from trec_cds.features.ner import EntityRecognition
 
 if __name__ == "__main__":

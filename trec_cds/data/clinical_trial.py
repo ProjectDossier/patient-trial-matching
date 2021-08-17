@@ -7,20 +7,20 @@ class ClinicalTrial:
     """ClinicalTrial is a wrapper class that contains most important fields from the ClicnialTrials xml dump file."""
 
     def __init__(
-            self,
-            org_study_id: str,
-            nct_id: str,
-            brief_title: str,
-            official_title: str,
-            summary: str,
-            description: str,
-            criteria: str,
-            inclusion: List[str],
-            exclusion: List[str],
-            gender: Gender,
-            minimum_age: datetime,
-            maximum_age: datetime,
-            healthy_volunteers: bool,
+        self,
+        org_study_id: str,
+        nct_id: str,
+        brief_title: str,
+        official_title: str,
+        summary: str,
+        description: str,
+        criteria: str,
+        inclusion: List[str],
+        exclusion: List[str],
+        gender: Gender,
+        minimum_age: datetime,
+        maximum_age: datetime,
+        healthy_volunteers: bool,
     ):
         self.org_study_id: str = org_study_id
         self.nct_id: str = nct_id  # primary id

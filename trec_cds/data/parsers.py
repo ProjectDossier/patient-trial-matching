@@ -9,6 +9,7 @@ from trec_cds.data.clinical_trial import ClinicalTrial
 from trec_cds.data.topic import Topic
 from trec_cds.data.utils import Gender
 
+
 def parse_topics_from_xml(topic_file: str) -> List[Topic]:
     """Parses topics from single XML file and creates a Topic class instance for each parsed item.
 
@@ -25,7 +26,7 @@ def parse_topics_from_xml(topic_file: str) -> List[Topic]:
     return topics
 
 
-def safe_get_item(item_name:str, root:ET) -> str:
+def safe_get_item(item_name: str, root: ET) -> str:
     item = root.find(item_name)
     if item:
         return item.text
@@ -107,15 +108,17 @@ def parse_criteria(criteria: str) -> Union[None, Tuple[List[str], List[str]]]:
     return inclusions, exclusions
 
 
-def _search_age_string(age_string:str, keyword:str, conversion_factor_to_years = 1) -> float:
+def _search_age_string(
+    age_string: str, keyword: str, conversion_factor_to_years=1
+) -> float:
     match = re.search(rf"(\d{1,2}) {keyword}[s]?", age_string)
     if match is not None:
         return int(match.group(1)) / conversion_factor_to_years
 
 
-def parse_age(age_string:str) -> Union[int, float, None]:
+def parse_age(age_string: str) -> Union[int, float, None]:
     if age_string:
-        if age_string in ["N/A", 'None']:
+        if age_string in ["N/A", "None"]:
             return None
 
         match = re.search(r"(\d{1,2}) Year[s]?", age_string)
@@ -142,18 +145,18 @@ def parse_age(age_string:str) -> Union[int, float, None]:
         if match is not None:
             return int(match.group(1)) / 525960
         else:
-            print('a', age_string)
+            print("a", age_string)
             return -1
     else:
         return None
 
 
-def parse_gender(gender_string:Union[str, None]) -> Gender:
-    if gender_string == 'All':
+def parse_gender(gender_string: Union[str, None]) -> Gender:
+    if gender_string == "All":
         return Gender.all
-    elif gender_string == 'Male':
+    elif gender_string == "Male":
         return Gender.male
-    elif gender_string == 'Female':
+    elif gender_string == "Female":
         return Gender.female
     else:
         print(gender_string)
@@ -220,7 +223,6 @@ def parse_clinical_trials_from_folder(
         # print(nct_id)
         parse_age(maximum_age)
 
-
         try:
             clinical_trials.append(
                 ClinicalTrial(
@@ -236,7 +238,7 @@ def parse_clinical_trials_from_folder(
                     inclusion=inclusion,
                     exclusion=exclusion,
                     brief_title=brief_title,
-                    official_title=official_title
+                    official_title=official_title,
                 )
             )
         except Exception as E:
