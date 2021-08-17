@@ -5,6 +5,8 @@ import xml.etree.ElementTree as ET
 from glob import glob
 from typing import List, Union, Tuple
 
+import tqdm
+
 from trec_cds.data.clinical_trial import ClinicalTrial
 from trec_cds.data.topic import Topic
 from trec_cds.data.utils import Gender
@@ -180,7 +182,7 @@ def parse_clinical_trials_from_folder(
     total_parsed = 0
 
     clinical_trials = []
-    for file in files:
+    for file in tqdm.tqdm(files):
         tree = ET.parse(file)
         root = tree.getroot()
 
@@ -191,9 +193,15 @@ def parse_clinical_trials_from_folder(
         if brief_summary:
             brief_summary = brief_summary[0].text
 
+        if not brief_summary:
+            brief_summary = ""
+
         description = root.find("detailed_description")
         if description:
             description = description[0].text
+
+        if not description:
+            description = ""
 
         brief_title = safe_get_item(item_name="brief_title", root=root)
         official_title = safe_get_item(item_name="official_title", root=root)
@@ -216,6 +224,8 @@ def parse_clinical_trials_from_folder(
                     total_parsed += 1
                     inclusion = result[0]
                     exclusion = result[1]
+            else:
+                criteria = ""
 
             gender = getattr(eligibility.find("gender"), "text", None)
             minimum_age = getattr(eligibility.find("minimum_age"), "text", None)
@@ -252,6 +262,9 @@ def parse_clinical_trials_from_folder(
             )
         )
 
-    print(f"percentage of successfully parsed criteria : {total_parsed / len(files)}")
+    if len(files) > 0:
+        print(
+            f"percentage of successfully parsed criteria : {total_parsed / len(files)}"
+        )
 
     return clinical_trials

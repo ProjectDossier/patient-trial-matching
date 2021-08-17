@@ -9,7 +9,7 @@ from trec_cds.features.ner import EntityRecognition, get_ner_model, get_displacy
 
 if __name__ == "__main__":
     topic_file = "data/external/topics2021.xml"
-    folder_name = "data/external/ClinicalTrials"
+    clinical_trials_folder = "data/external/ClinicalTrials"
 
     topics = load_topics_from_xml(topic_file)
 
@@ -29,7 +29,9 @@ if __name__ == "__main__":
     )
     df.to_csv("data/processed/topics.csv", index=False)
 
-    cts = parse_clinical_trials_from_folder(folder_name=folder_name, first_n=100)
+    cts = parse_clinical_trials_from_folder(
+        folder_name=clinical_trials_folder, first_n=100
+    )
     nlp = get_ner_model(custom_ner_model_path="models/ner_age_gender-new")
 
     docs = []
