@@ -10,8 +10,8 @@ if __name__ == "__main__":
 
     topics = parse_topics_from_xml(topic_file)
 
-    # er = EntityRecognition()
-    # er.predict(topics=topics)
+    er = EntityRecognition()
+    er.predict(topics=topics)
 
     print(topics)
 

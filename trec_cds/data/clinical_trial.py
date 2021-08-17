@@ -4,7 +4,10 @@ from trec_cds.data.utils import Gender
 
 
 class ClinicalTrial:
-    """ClinicalTrial is a wrapper class that contains most important fields from the ClicnialTrials xml dump file."""
+    """ClinicalTrial is a wrapper class that contains most important fields
+    from the ClicnialTrials xml dump file."""
+
+    text: str
 
     def __init__(
             self,
@@ -39,7 +42,3 @@ class ClinicalTrial:
         self.minimum_age: Union[int, float, None] = minimum_age
         self.maximum_age: Union[int, float, None] = maximum_age
         self.healthy_volunteers: bool = healthy_volunteers  # True means accept healthy
-
-    def get_text(self):
-        if self.criteria is None or self.criteria.strip() == "":
-            return self.criteria

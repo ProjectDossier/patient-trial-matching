@@ -63,8 +63,10 @@ def parse_criteria(criteria: str) -> Union[None, Tuple[List[str], List[str]]]:
     else:
         return None
 
-    # if empty.strip() != "":
-    #     print('empty', empty)
+    if empty.strip().lower() not in ["", "key", "-", "main"]:
+        logging.debug(
+            "parse_criteria: skipping not parsed text after split: %s", empty.strip()
+        )
 
     exclusion_criteria_strings = [
         "Exclusion Criteria",
@@ -151,12 +153,20 @@ def parse_gender(gender_string: Union[str, None]) -> Gender:
     elif gender_string == "Female":
         return Gender.female
     else:
-        print(gender_string)
-        return Gender.unknown
+        return Gender.unknown  # most probably gender criteria were empty
+
+
+def parse_health_status(healthy_volunteers: Union[str, None]) -> bool:
+    if healthy_volunteers == "Accepts Healthy Volunteers":
+        return True
+    elif healthy_volunteers == "No":
+        return False
+    else:
+        return True  # no data to exclude so we assume that it is possible to also include healthy
 
 
 def parse_clinical_trials_from_folder(
-    folder_name: str, first_n: Union[None, int] = None
+        folder_name: str, first_n: Union[None, int] = None
 ) -> List[ClinicalTrial]:
     files = [y for x in os.walk(folder_name) for y in glob(os.path.join(x[0], "*.xml"))]
 
@@ -210,31 +220,28 @@ def parse_clinical_trials_from_folder(
                 eligibility.find("healthy_volunteers"), "text", None
             )
 
-        parse_gender(gender)
-        print(parse_age(minimum_age))
-        # print(nct_id)
-        parse_age(maximum_age)
+        gender = parse_gender(gender)
+        minimum_age = parse_age(minimum_age)
+        maximum_age = parse_age(maximum_age)
+        healthy_volunteers = parse_health_status(healthy_volunteers)
 
-        try:
-            clinical_trials.append(
-                ClinicalTrial(
-                    org_study_id=org_study_id,
-                    nct_id=nct_id,
-                    summary=brief_summary,
-                    description=description,
-                    criteria=criteria,
-                    gender=gender,
-                    minimum_age=minimum_age,
-                    maximum_age=maximum_age,
-                    healthy_volunteers=healthy_volunteers,
-                    inclusion=inclusion,
-                    exclusion=exclusion,
-                    brief_title=brief_title,
-                    official_title=official_title,
-                )
+        clinical_trials.append(
+            ClinicalTrial(
+                org_study_id=org_study_id,
+                nct_id=nct_id,
+                summary=brief_summary,
+                description=description,
+                criteria=criteria,
+                gender=gender,
+                minimum_age=minimum_age,
+                maximum_age=maximum_age,
+                healthy_volunteers=healthy_volunteers,
+                inclusion=inclusion,
+                exclusion=exclusion,
+                brief_title=brief_title,
+                official_title=official_title,
             )
-        except Exception as E:
-            print(file, E)
+        )
 
     print(f"percentage of successfully parsed criteria : {total_parsed / len(files)}")
 

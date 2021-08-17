@@ -2,7 +2,7 @@ import json
 import random
 import re
 from pathlib import Path
-from typing import List, Dict
+from typing import List, Dict, Union
 
 import spacy
 from spacy import displacy
@@ -77,17 +77,24 @@ class EntityRecognition:
         return topics
 
 
-def extract_age_from_entity(text: str) -> int:
+def extract_age_from_entity(text: str) -> Union[int, float, None]:
     """Extracts age from candidate string coming from AGE entity in spacy NER model
-    TODO: add handling of /-day-old, -month-old/
     :param text: string containing entity containing age candidate
-    :return: int: patient's age. If integer is not found, functions returns -1
+    :return: int: patient's age. If integer is not found, functions returns None
     """
+    match = re.search(r"(\d{1,2})[- ](month[s]?[- ]old)", text)
+    if match is not None:
+        return int(match.group(1)) / 12
+
+    match = re.search(r"(\d{1,2})[- ](day[s]?[- ]old)", text)
+    if match is not None:
+        return int(match.group(1)) / 365
+
     match = re.search(r"\d{1,2}", text)
     if match is not None:
         return int(match.group(0))
-    else:
-        return -1
+
+    return None
 
 
 def extract_gender_from_entity(text: str) -> Gender:
@@ -133,8 +140,8 @@ def extract_gender_from_text(text: str) -> Gender:
 
 
 if __name__ == "__main__":
-    topic_file = "data/external/topics2021.xml"
-    topics = parse_topics_from_xml(topic_file)
+    TOPIC_FILE = "data/external/topics2021.xml"
+    topics = parse_topics_from_xml(TOPIC_FILE)
 
     nlp = get_ner_model(custom_ner_model_path="models/ner_age_gender-new")
 
