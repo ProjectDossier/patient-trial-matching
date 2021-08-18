@@ -15,8 +15,7 @@ from trec_cds.features.ner import EntityRecognition, get_ner_model, get_displacy
 import logging
 
 
-def postprocessing(result_filename: str, output_file, clinical_trials_dict,
-                   topics):
+def postprocessing(result_filename: str, output_file, clinical_trials_dict, topics):
     with open(result_filename) as fp:
         results = json.load(fp)
 
@@ -38,22 +37,25 @@ def postprocessing(result_filename: str, output_file, clinical_trials_dict,
             clinical_trial = clinical_trials_dict.get(nct_id, {})
             if clinical_trial:
                 checked += 1
-                if not (clinical_trial.gender == gender or clinical_trial.gender in [Gender.all, Gender.unknown]):
-                    logging.info('gender mismatch')
+                if not (
+                        clinical_trial.gender == gender
+                        or clinical_trial.gender in [Gender.all, Gender.unknown]
+                ):
+                    logging.info("gender mismatch")
                     excluded_num += 1
                     continue
 
                 if clinical_trial.minimum_age and age < clinical_trial.minimum_age:
-                    logging.info('skipping because of minimum_age age')
+                    logging.info("skipping because of minimum_age age")
                     excluded_num += 1
                     continue
                 if clinical_trial.maximum_age and age > clinical_trial.maximum_age:
-                    logging.info('skipping because of maximum_age age')
+                    logging.info("skipping because of maximum_age age")
                     excluded_num += 1
                     continue
 
                 if healthy and not clinical_trial.healthy_volunteers:
-                    logging.info('trial not accepting healthy volunteers')
+                    logging.info("trial not accepting healthy volunteers")
                     excluded_num += 1
                     continue
 
@@ -62,9 +64,13 @@ def postprocessing(result_filename: str, output_file, clinical_trials_dict,
         output_scores[topic_no] = included
         total_checked += checked
         total_excluded += excluded_num
-        print(f"{topic_no} - {len(included)} - checked: {checked}, excluded {excluded_num}")
+        print(
+            f"{topic_no} - {len(included)} - checked: {checked}, excluded {excluded_num}"
+        )
 
-    print(f"{total_checked} - {total_excluded} - percentage of excluded {total_excluded / total_checked}%")
+    print(
+        f"{total_checked} - {total_excluded} - percentage of excluded {total_excluded / total_checked}%"
+    )
 
     with open(output_file, "w") as fp:
         json.dump(output_scores, fp)
@@ -82,14 +88,17 @@ if __name__ == "__main__":
     print(topics)
     health_status_df = pd.read_csv("data/raw/topics-healthiness.csv")
     for topic in topics:
-        label = health_status_df[topic.number == health_status_df['index']]['label'].tolist()[0]
+        label = health_status_df[topic.number == health_status_df["index"]][
+            "label"
+        ].tolist()[0]
         if label == "HEALTHY":
             topic.healthy = True
         else:
             topic.healthy = False
 
-    cts = parse_clinical_trials_from_folder(folder_name=clinical_trials_folder,
-                                            first_n=40000)
+    cts = parse_clinical_trials_from_folder(
+        folder_name=clinical_trials_folder, first_n=40000
+    )
 
     cts_dict = {ct.nct_id: ct for ct in cts}
 
@@ -97,5 +106,5 @@ if __name__ == "__main__":
         result_filename="data/processed/bm25-baseline-scores.json",
         output_file="data/processed/bm25-baseline-postprocessed.json",
         clinical_trials_dict=cts_dict,
-        topics=topics
+        topics=topics,
     )
