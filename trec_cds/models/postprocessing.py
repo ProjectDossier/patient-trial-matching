@@ -1,18 +1,14 @@
 import json
-from dataclasses import asdict
-from typing import List
-from trec_cds.data.utils import Gender
-import pandas as pd
-from spacy import displacy
+import logging
 
-from trec_cds.data.clinical_trial import ClinicalTrial
+import pandas as pd
+
 from trec_cds.data.parsers import (
     load_topics_from_xml,
     parse_clinical_trials_from_folder,
 )
-from trec_cds.data.topic import Topic
-from trec_cds.features.ner import EntityRecognition, get_ner_model, get_displacy_options
-import logging
+from trec_cds.data.utils import Gender
+from trec_cds.features.ner import EntityRecognition
 
 
 def postprocessing(result_filename: str, output_file, clinical_trials_dict, topics):
@@ -37,19 +33,27 @@ def postprocessing(result_filename: str, output_file, clinical_trials_dict, topi
             clinical_trial = clinical_trials_dict.get(nct_id, {})
             if clinical_trial:
                 checked += 1
-                if not (
-                        clinical_trial.gender == gender
-                        or clinical_trial.gender in [Gender.all, Gender.unknown]
-                ):
+                if clinical_trial.gender != gender and clinical_trial.gender not in [
+                    Gender.all,
+                    Gender.unknown,
+                ]:
                     logging.info("gender mismatch")
                     excluded_num += 1
                     continue
 
-                if clinical_trial.minimum_age and age < clinical_trial.minimum_age:
+                if (
+                        age != -1
+                        and clinical_trial.minimum_age
+                        and age < clinical_trial.minimum_age
+                ):
                     logging.info("skipping because of minimum_age age")
                     excluded_num += 1
                     continue
-                if clinical_trial.maximum_age and age > clinical_trial.maximum_age:
+                if (
+                        age != -1
+                        and clinical_trial.maximum_age
+                        and age > clinical_trial.maximum_age
+                ):
                     logging.info("skipping because of maximum_age age")
                     excluded_num += 1
                     continue
@@ -97,7 +101,7 @@ if __name__ == "__main__":
             topic.healthy = False
 
     cts = parse_clinical_trials_from_folder(
-        folder_name=clinical_trials_folder, first_n=40000
+        folder_name=clinical_trials_folder, first_n=400000
     )
 
     cts_dict = {ct.nct_id: ct for ct in cts}

@@ -1,10 +1,6 @@
 import json
 
 
-def postprocessing():
-    pass
-
-
 def convert_to_trac_submission(result_filename: str, run_name: str, output_folder):
     """submission format:
     TOPIC_NO Q0 ID RANK SCORE RUN_NAME
@@ -25,26 +21,25 @@ def convert_to_trac_submission(result_filename: str, run_name: str, output_folde
                     results[topic_no].items(), key=lambda item: item[1], reverse=True
                 )
             }
-            print(sorted_results)
             max_value = max(sorted_results.values())
             print(max_value)
 
             sorted_results = {k: v / max_value for k, v in sorted_results.items()}
             print(sorted_results)
 
-            for rank, doc in enumerate(results[topic_no]):
+            for rank, doc in enumerate(sorted_results):
                 if rank >= 1000:
                     break
                 # print(doc, results[topic_no][doc])
-                score = results[topic_no][doc]
+                score = sorted_results[doc]
 
-                line = f"{topic_no} Q0 {doc} {rank} {score} {run_name}\n"
+                line = f"{topic_no} Q0 {doc} {rank + 1} {score} {run_name}\n"
                 fp.write(line)
 
 
 if __name__ == "__main__":
     convert_to_trac_submission(
-        result_filename="data/processed/bm25-baseline-scores.json",
-        run_name="baseline",
+        result_filename="data/processed/bm25-baseline-postprocessed.json",
+        run_name="postproc",
         output_folder="data/processed/submissions/",
     )
