@@ -29,10 +29,10 @@ doc_scores = bm25.get_scores(tokenized_query)
 print(doc_scores)
 
 if __name__ == "__main__":
-    folder_name = "data/external/ClinicalTrials"
-    first_n = 2000
+    CLINICAL_TRIALS_FOLDER = "data/external/ClinicalTrials"
+    FIRST_N = 2000
 
-    cts = parse_clinical_trials_from_folder(folder_name=folder_name, first_n=first_n)
+    cts = parse_clinical_trials_from_folder(folder_name=CLINICAL_TRIALS_FOLDER, first_n=FIRST_N)
     # sample
 
     nlp = spacy.load("en_core_web_sm")
