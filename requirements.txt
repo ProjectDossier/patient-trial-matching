@@ -17,3 +17,4 @@ https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.4.0/en_core_sci_s
 https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.4.0/en_core_sci_sm-0.4.0.tar.gz
 setuptools~=52.0.0
 numpy~=1.20.3
+tqdm~=4.61.2

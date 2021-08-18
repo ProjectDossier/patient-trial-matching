@@ -32,7 +32,9 @@ if __name__ == "__main__":
     CLINICAL_TRIALS_FOLDER = "data/external/ClinicalTrials"
     FIRST_N = 2000
 
-    cts = parse_clinical_trials_from_folder(folder_name=CLINICAL_TRIALS_FOLDER, first_n=FIRST_N)
+    cts = parse_clinical_trials_from_folder(
+        folder_name=CLINICAL_TRIALS_FOLDER, first_n=FIRST_N
+    )
     # sample
 
     nlp = spacy.load("en_core_web_sm")

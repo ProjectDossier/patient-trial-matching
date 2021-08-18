@@ -171,6 +171,52 @@ def parse_health_status(healthy_volunteers: Union[str, None]) -> bool:
         return True
 
 
+def parse_eligibility(
+        root: ET,
+) -> Tuple[Gender, int, int, bool, str, List[str], List[str]]:
+    inclusion: List[str] = []
+    exclusion: List[str] = []
+    eligibility = root.find("eligibility")
+    if not eligibility:
+        criteria = ""
+        gender = ""
+        minimum_age = ""
+        maximum_age = ""
+        healthy_volunteers = ""
+    else:
+        criteria = eligibility.find("criteria")
+        if criteria:
+            criteria = criteria[0].text
+            result = parse_criteria(criteria=criteria)
+            if result:
+                inclusion = result[0]
+                exclusion = result[1]
+        else:
+            criteria = ""
+
+        gender = getattr(eligibility.find("gender"), "text", None)
+        minimum_age = getattr(eligibility.find("minimum_age"), "text", None)
+        maximum_age = getattr(eligibility.find("maximum_age"), "text", None)
+        healthy_volunteers = getattr(
+            eligibility.find("healthy_volunteers"), "text", None
+        )
+
+    gender = parse_gender(gender)
+    minimum_age = parse_age(minimum_age)
+    maximum_age = parse_age(maximum_age)
+    healthy_volunteers = parse_health_status(healthy_volunteers)
+
+    return (
+        gender,
+        minimum_age,
+        maximum_age,
+        healthy_volunteers,
+        criteria,
+        inclusion,
+        exclusion,
+    )
+
+
 def parse_clinical_trials_from_folder(
         folder_name: str, first_n: Union[None, int] = None
 ) -> List[ClinicalTrial]:
@@ -206,38 +252,15 @@ def parse_clinical_trials_from_folder(
         brief_title = safe_get_item(item_name="brief_title", root=root)
         official_title = safe_get_item(item_name="official_title", root=root)
 
-        inclusion = []
-        exclusion = []
-        eligibility = root.find("eligibility")
-        if not eligibility:
-            criteria = ""
-            gender = ""
-            minimum_age = ""
-            maximum_age = ""
-            healthy_volunteers = ""
-        else:
-            criteria = eligibility.find("criteria")
-            if criteria:
-                criteria = criteria[0].text
-                result = parse_criteria(criteria=criteria)
-                if result:
-                    total_parsed += 1
-                    inclusion = result[0]
-                    exclusion = result[1]
-            else:
-                criteria = ""
-
-            gender = getattr(eligibility.find("gender"), "text", None)
-            minimum_age = getattr(eligibility.find("minimum_age"), "text", None)
-            maximum_age = getattr(eligibility.find("maximum_age"), "text", None)
-            healthy_volunteers = getattr(
-                eligibility.find("healthy_volunteers"), "text", None
-            )
-
-        gender = parse_gender(gender)
-        minimum_age = parse_age(minimum_age)
-        maximum_age = parse_age(maximum_age)
-        healthy_volunteers = parse_health_status(healthy_volunteers)
+        (
+            gender,
+            minimum_age,
+            maximum_age,
+            healthy_volunteers,
+            criteria,
+            inclusion,
+            exclusion,
+        ) = parse_eligibility(root=root)
 
         text: str = brief_title + official_title + brief_summary + criteria
         if text.strip() == "":
