@@ -24,7 +24,7 @@ def load_topics_from_xml(topic_file: str) -> List[Topic]:
 
     topics = []
     for elem in root:
-        topics.append(Topic(number=elem.attrib["number"], text=elem.text))
+        topics.append(Topic(number=int(elem.attrib["number"]), text=elem.text))
 
     return topics
 

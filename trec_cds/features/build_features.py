@@ -1,4 +1,5 @@
 import logging
+from dataclasses import asdict
 
 import pandas as pd
 import spacy
@@ -23,15 +24,6 @@ class ClinicalTrialsFeatures:
         )
         logging.warning("loaded spacy language model for preprocessing Clinical Trials")
 
-    def get_text(self, clinical_trial: ClinicalTrial):
-        text = (
-                clinical_trial.brief_title
-                + clinical_trial.official_title
-                + clinical_trial.summary
-                + clinical_trial.criteria
-        )
-        clinical_trial.text = text
-
     def preprocess_text(self, clinical_trial: ClinicalTrial):
         preprocessed = self.nlp(clinical_trial.text)
 
@@ -43,13 +35,12 @@ class ClinicalTrialsFeatures:
 if __name__ == "__main__":
     feature_builder = ClinicalTrialsFeatures()
 
-    clinical_trials_folder = "data/external/ClinicalTrials"
-    cts = parse_clinical_trials_from_folder(folder_name=clinical_trials_folder)
+    CLINICAL_TRIALS_FOLDER = "data/external/ClinicalTrials"
+    cts = parse_clinical_trials_from_folder(folder_name=CLINICAL_TRIALS_FOLDER, first_n=100)
 
     for ct in tqdm(cts):
-        feature_builder.get_text(clinical_trial=ct)
         feature_builder.preprocess_text(clinical_trial=ct)
         # print(ct.text_preprocessed)
 
-    df = pd.DataFrame([o.__dict__ for o in cts])
+    df = pd.DataFrame([asdict(o) for o in cts])
     df.to_csv("data/processed/clinical_trials.csv", index=False)
