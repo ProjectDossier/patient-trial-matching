@@ -10,6 +10,9 @@ from trec_cds.data.parsers import (
     load_topics_from_xml,
     parse_clinical_trials_from_folder,
 )
+import torch
+
+device = "cuda:2" if torch.cuda.is_available() else "cpu"
 
 
 def reranking(result_filename: str, output_file, clinical_trials_dict, topics):
@@ -17,6 +20,7 @@ def reranking(result_filename: str, output_file, clinical_trials_dict, topics):
         results = json.load(fp)
 
     model = SentenceTransformer("sentence-transformers/allenai-specter")
+    model = model.to(device)
 
     total_checked = 0
     total_excluded = 0
@@ -39,16 +43,13 @@ def reranking(result_filename: str, output_file, clinical_trials_dict, topics):
             if clinical_trial:
                 checked += 1
 
-                print(clinical_trial.inclusion)
                 if len(clinical_trial.inclusion) == 0:
                     inclusions_encoded = model.encode([clinical_trial.text])
                 else:
                     inclusions_encoded = model.encode(clinical_trial.inclusion)
 
                 if len(clinical_trial.exclusion) == 0:
-                    print("encoding empty")
                     exclusions_encoded = np.zeros(topic_encoded.shape)
-                    print(exclusions_encoded.shape)
                 else:
                     exclusions_encoded = model.encode(clinical_trial.exclusion)
 
@@ -66,7 +67,9 @@ def reranking(result_filename: str, output_file, clinical_trials_dict, topics):
                 ) * (1 - np.mean(np.sort(topic_exclusion_similarities)[-3:]))
 
                 if np.mean(np.sort(topic_exclusion_similarities)[-2:]) > 0.75:
-                    print(f"discarding {nct_id}  --> {topic_no}")
+                    print(
+                        f"discarding {nct_id}  for {topic_no} topic. {np.mean(np.sort(topic_exclusion_similarities)[-2:])}"
+                    )
                     excluded_num += 1
                 else:
                     included[nct_id] = combined_score[nct_id]
