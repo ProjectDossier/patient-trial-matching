@@ -1,63 +1,110 @@
+import argparse
+import json
 import pickle
+from typing import List, Dict
 
-import spacy
-import tqdm
+import numpy as np
 from rank_bm25 import BM25Okapi
+from tqdm import tqdm
 
+from trec_cds.data.clinical_trial import ClinicalTrial
 from trec_cds.data.parsers import (
     parse_clinical_trials_from_folder,
     load_topics_from_xml,
 )
-
-corpus = [
-    "Hello there good man!",
-    "It is quite windy in London",
-    "How is the weather today?",
-]
-
-tokenized_corpus = [doc.split(" ") for doc in corpus]
-
-bm25 = BM25Okapi(tokenized_corpus)
-# <rank_bm25.BM25Okapi at 0x1047881d0>
+from trec_cds.features.build_features import ClinicalTrialsFeatures
 
 
-query = "windy London"
-tokenized_query = query.split(" ")
+class Indexer:
+    index: BM25Okapi
 
-doc_scores = bm25.get_scores(tokenized_query)
-# array([0.        , 0.93729472, 0.        ])
-print(doc_scores)
+    def __init__(self):
+        pass
+
+    def index_clinical_trials(self, clinical_trials: List[ClinicalTrial]):
+        cts_tokenized = []
+
+        for _clinical_trial in tqdm(clinical_trials):
+            cts_tokenized.append(_clinical_trial.text_preprocessed)
+
+        self.index = BM25Okapi(cts_tokenized)
+
+    def query(self, docs: List[List[str]]):
+        pass
+
+    def query_single(self, query: List[str], return_top_n: int) -> Dict[str, float]:
+        topic_scores = {}
+        doc_scores = self.index.get_scores(query)
+        for index, score in zip(
+                np.argsort(doc_scores)[-return_top_n:], np.sort(doc_scores)[-return_top_n:]
+        ):
+            topic_scores[cts[index].nct_id] = score
+
+        return topic_scores
+
+    def load_index(self, filename: str):
+        self.index = pickle.load(open(filename, "rb"))
+
+    def save_index(self, filename: str):
+        pickle.dump(self.index, open(filename, "wb"))
+
 
 if __name__ == "__main__":
-    CLINICAL_TRIALS_FOLDER = "data/external/ClinicalTrials"
-    FIRST_N = 2000
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--clinical_trials_folder",
+        default="data/external/ClinicalTrials",
+        type=str,
+        help="path to a folder with clinical trials",
+    )
+    parser.add_argument(
+        "--topic_file",
+        default="data/external/topics2021.xml",
+        type=str,
+        help="path to an xml file with topics data",
+    )
+    parser.add_argument(
+        "--model_outfile",
+        default="models/bm25-baseline1.p",
+        type=str,
+        help="path to a outfile where indexed model will be saved.",
+    )
+    parser.add_argument(
+        "--first_n",
+        default=250000,
+        type=int,
+        help="load only first n clinical trial documents (max is ~370k)",
+    )
+
+    parser.add_argument(
+        "--return_top_n",
+        default=2000,
+        type=int,
+        help="return top n results from retrieval model",
+    )
+
+    args = parser.parse_args()
 
     cts = parse_clinical_trials_from_folder(
-        folder_name=CLINICAL_TRIALS_FOLDER, first_n=FIRST_N
+        folder_name=args.clinical_trials_folder, first_n=args.first_n
     )
-    # sample
 
-    nlp = spacy.load("en_core_web_sm")
+    feature_builder = ClinicalTrialsFeatures()
+    for clinical_trial in tqdm(cts):
+        feature_builder.preprocess_clinical_trial(clinical_trial=clinical_trial)
 
-    cts_tokenized = []
-    for clinical_trial in tqdm.tqdm(cts):
-        if clinical_trial.criteria is None or clinical_trial.criteria.strip() == "":
-            doc = nlp("empty")
-            print("empty")
-            print(clinical_trial.summary)
-        else:
-            doc = nlp(clinical_trial.criteria)
-        cts_tokenized.append([word.text for word in doc])
+    indexer = Indexer()
+    indexer.index_clinical_trials(clinical_trials=cts)
+    indexer.save_index(filename=args.model_outfile)
 
-    print("tokenizing done")
-    bm25 = BM25Okapi(cts_tokenized)
-    print(bm25)
-    pickle.dump(bm25, open("models/bm25.p", "wb"))
+    topics = load_topics_from_xml(topic_file=args.topic_file)
 
-    topic_file = "data/external/topics2021.xml"
-    topics = load_topics_from_xml(topic_file)
+    output_scores = {}
+    for topic in tqdm(topics):
+        doc = feature_builder.preprocess_text(topic.text)
+        topic_scores = indexer.query_single(query=doc, return_top_n=args.return_top_n)
 
-    for topic in topics[:3]:
-        doc = nlp(topic.text)
-        doc_scores = bm25.get_scores([word.text for word in doc])
-        print(doc_scores)
+        output_scores[topic.number] = topic_scores
+
+    with open("data/processed/bm25-baseline-scores.json", "w") as fp:
+        json.dump(output_scores, fp)

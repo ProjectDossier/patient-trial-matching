@@ -40,8 +40,8 @@ if __name__ == "__main__":
     nlp = get_ner_model(custom_ner_model_path="models/ner_age_gender-new")
 
     docs = []
-    for topic in cts:
-        doc = nlp(topic.criteria)
+    for clinical_trial in cts:
+        doc = nlp(clinical_trial.criteria)
         docs.append(doc)
 
     options = get_displacy_options()
