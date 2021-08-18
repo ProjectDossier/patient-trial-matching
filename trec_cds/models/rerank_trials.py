@@ -1,37 +1,15 @@
 import argparse
-import logging
-from typing import List
-
-import pandas as pd
-import torch
-from tqdm import tqdm
-from transformers import AutoTokenizer, AutoModelForQuestionAnswering
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
-import json
-
-from trec_cds.data.clinical_trial import ClinicalTrial
-from trec_cds.data.parsers import (
-    load_topics_from_xml,
-    parse_clinical_trials_from_folder,
-)
-from trec_cds.data.topic import Topic
-from trec_cds.features.ner import EntityRecognition, get_ner_model, get_displacy_options
-from sklearn.metrics.pairwise import cosine_similarity
-from sentence_transformers import SentenceTransformer
-
 import json
 import logging
 
-import pandas as pd
-
-from trec_cds.data.parsers import (
-    load_topics_from_xml,
-    parse_clinical_trials_from_folder,
-)
-from trec_cds.data.utils import Gender
-from trec_cds.features.ner import EntityRecognition
 import numpy as np
-import scipy
+from sentence_transformers import SentenceTransformer
+from sklearn.metrics.pairwise import cosine_similarity
+
+from trec_cds.data.parsers import (
+    load_topics_from_xml,
+    parse_clinical_trials_from_folder,
+)
 
 
 def reranking(result_filename: str, output_file, clinical_trials_dict, topics):
@@ -44,6 +22,7 @@ def reranking(result_filename: str, output_file, clinical_trials_dict, topics):
     total_excluded = 0
 
     output_scores = {}
+    # encoded_vectors = {}
     for topic_no in results:
         included = {}
         logging.info(topic_no)
@@ -67,29 +46,33 @@ def reranking(result_filename: str, output_file, clinical_trials_dict, topics):
                     inclusions_encoded = model.encode(clinical_trial.inclusion)
 
                 if len(clinical_trial.exclusion) == 0:
-                    print('encoding empty')
+                    print("encoding empty")
                     exclusions_encoded = np.zeros(topic_encoded.shape)
                     print(exclusions_encoded.shape)
                 else:
                     exclusions_encoded = model.encode(clinical_trial.exclusion)
 
-                topic_inclusion_similarities = cosine_similarity(topic_encoded,
-                                                                 inclusions_encoded)  # topic_encoded.dot(inclusions_encoded) / (np.linalg.norm(topic_encoded, axis=1) * np.linalg.norm(inclusions_encoded))
-                topic_exclusion_similarities = cosine_similarity(topic_encoded,
-                                                                 exclusions_encoded)  # topic_encoded.dot(exclusions_encoded) / (np.linalg.norm(topic_encoded, axis=1) * np.linalg.norm(exclusions_encoded))
+                topic_inclusion_similarities = cosine_similarity(
+                    topic_encoded, inclusions_encoded
+                )
+                topic_exclusion_similarities = cosine_similarity(
+                    topic_encoded, exclusions_encoded
+                )
 
                 inclusions_similarity[nct_id] = topic_inclusion_similarities
                 exclusions_similarity[nct_id] = topic_exclusion_similarities
-                combined_score[nct_id] = np.mean(np.sort(topic_inclusion_similarities)[-3:]) * (
-                            1 - np.mean(np.sort(topic_exclusion_similarities)[-3:]))
+                combined_score[nct_id] = np.mean(
+                    np.sort(topic_inclusion_similarities)[-3:]
+                ) * (1 - np.mean(np.sort(topic_exclusion_similarities)[-3:]))
 
                 if np.mean(np.sort(topic_exclusion_similarities)[-2:]) > 0.75:
-                    print(f'discarding {nct_id}  --> {topic_no}')
+                    print(f"discarding {nct_id}  --> {topic_no}")
                     excluded_num += 1
                 else:
                     included[nct_id] = combined_score[nct_id]
 
         output_scores[topic_no] = included
+        # encoded_vectors[topic_no] = {'inclusions': inclusions_similarity, 'exclusions': exclusions_similarity}
         total_checked += checked
         total_excluded += excluded_num
         print(
@@ -99,6 +82,9 @@ def reranking(result_filename: str, output_file, clinical_trials_dict, topics):
         if int(topic_no) % 2 == 0:
             with open(output_file, "w") as fp:
                 json.dump(output_scores, fp)
+
+            # with open("data/processed/reranking_vectors.json", "w") as fp:
+            #     json.dump(encoded_vectors, fp)
 
     print(
         f"{total_checked} - {total_excluded} - percentage of excluded {total_excluded / total_checked}%"
