@@ -37,6 +37,18 @@ def safe_get_item(item_name: str, root: ET) -> str:
         return ""
 
 
+def get_criteria(criteria_string: str) -> List[str]:
+    criteria_list: List[str] = []
+
+    if criteria_string.strip():
+        for criterion in re.split(r" - | \d\. ", criteria_string):
+            if criterion.strip() and criterion.strip() != ":":
+                criterion = re.sub(r"[\r\n\t ]+", " ", criterion)
+                criteria_list.append(criterion)
+
+    return criteria_list
+
+
 def parse_criteria(criteria: str) -> Union[None, Tuple[List[str], List[str]]]:
     """Tries to parse the criteria xml element to find and extract inclusion and
     exclusion criteria for a study.
@@ -95,21 +107,10 @@ def parse_criteria(criteria: str) -> Union[None, Tuple[List[str], List[str]]]:
     else:
         return None
 
-    inclusions = []
-    if inclusion.strip():
-        for criterion in re.split(r" - | \d\. ", inclusion):
-            if criterion.strip() and criterion.strip() != ":":
-                criterion = re.sub(r"[\r\n\t ]+", " ", criterion)
-                inclusions.append(criterion)
-    else:
+    inclusions = get_criteria(criteria_string=inclusion)
+    if len(inclusions) == 0:
         return None
-
-    exclusions = []
-    if exclusion.strip():
-        for criterion in re.split(r" - | \d\. ", exclusion):
-            if criterion.strip() and criterion.strip() != ":":
-                criterion = re.sub(r"[\r\n\t ]+", " ", criterion)
-                exclusions.append(criterion)
+    exclusions = get_criteria(criteria_string=exclusion)
 
     return inclusions, exclusions
 
@@ -219,8 +220,15 @@ def parse_eligibility(
 
 def parse_clinical_trials_from_folder(
         folder_name: str, first_n: Union[None, int] = None
-) -> List[ClinicalTrial]:
+) -> Union[List[ClinicalTrial], None]:
     files = [y for x in os.walk(folder_name) for y in glob(os.path.join(x[0], "*.xml"))]
+
+    if len(files) == 0:
+        logging.error(
+            "No files in a folder %s. Stopping parse_clinical_trials_from_folder",
+            folder_name,
+        )
+        return None
 
     if first_n:
         files = files[:first_n]
@@ -286,8 +294,8 @@ def parse_clinical_trials_from_folder(
         )
 
     if len(files) > 0:
-        print(
-            f"percentage of successfully parsed criteria : {total_parsed / len(files)}"
+        logging.info(
+            "percentage of successfully parsed criteria: %f", total_parsed / len(files)
         )
 
     return clinical_trials
