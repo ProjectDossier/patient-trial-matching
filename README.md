@@ -6,7 +6,7 @@ TU Wien @ TREC 2021 Clinical Trials Task
 
 ## Installation
 
-Install requirements with:
+Tested with `python=3.8`. Install requirements with:
 
 ```bash
 $ pip install -r requirements.txt 
@@ -66,6 +66,9 @@ others for consideration:
 - CXR - chest X-ray
 - SOB - shortness of breath
 
+## Next steps
+
+- detection of negation and speculation.
 
 Project Organization
 ------------
