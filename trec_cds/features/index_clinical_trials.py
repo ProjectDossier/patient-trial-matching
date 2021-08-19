@@ -16,10 +16,9 @@ from trec_cds.features.build_features import ClinicalTrialsFeatures
 
 
 class Indexer:
+    """Wrapper around BM25Okapi class that indexes ClinicalTrials and allows for
+    querying them with Topic data. input data must be preprocessed and tokenized."""
     index: BM25Okapi
-
-    def __init__(self):
-        pass
 
     def index_clinical_trials(self, clinical_trials: List[ClinicalTrial]):
         cts_tokenized = []
@@ -28,9 +27,6 @@ class Indexer:
             cts_tokenized.append(_clinical_trial.text_preprocessed)
 
         self.index = BM25Okapi(cts_tokenized)
-
-    def query(self, docs: List[List[str]]):
-        pass
 
     def query_single(self, query: List[str], return_top_n: int) -> Dict[str, float]:
         topic_scores = {}
@@ -43,10 +39,14 @@ class Indexer:
         return topic_scores
 
     def load_index(self, filename: str):
-        self.index = pickle.load(open(filename, "rb"))
+        """Loads index from a pickled file into index variable."""
+        with open(filename, "rb") as _fp:
+            self.index = pickle.load(_fp)
 
     def save_index(self, filename: str):
-        pickle.dump(self.index, open(filename, "wb"))
+        """Saves index into a pickled file."""
+        with open(filename, "rb") as _fp:
+            pickle.dump(self.index, _fp)
 
 
 if __name__ == "__main__":
@@ -67,18 +67,24 @@ if __name__ == "__main__":
         "--model_outfile",
         default="models/bm25-baseline1.p",
         type=str,
-        help="path to a outfile where indexed model will be saved.",
+        help="path to an outfile where indexed model will be saved.",
+    )
+    parser.add_argument(
+        "--results_outfile",
+        default="data/processed/bm25-baseline.json",
+        type=str,
+        help="path to an outfile where indexed results will be saved.",
     )
     parser.add_argument(
         "--first_n",
-        default=250000,
+        default=25000,
         type=int,
         help="load only first n clinical trial documents (max is ~370k)",
     )
 
     parser.add_argument(
         "--return_top_n",
-        default=2000,
+        default=1000,
         type=int,
         help="return top n results from retrieval model",
     )
@@ -102,9 +108,9 @@ if __name__ == "__main__":
     output_scores = {}
     for topic in tqdm(topics):
         doc = feature_builder.preprocess_text(topic.text)
-        topic_scores = indexer.query_single(query=doc, return_top_n=args.return_top_n)
+        output_scores[topic.number] = indexer.query_single(
+            query=doc, return_top_n=args.return_top_n
+        )
 
-        output_scores[topic.number] = topic_scores
-
-    with open("data/processed/bm25-baseline-scores.json", "w") as fp:
+    with open(args.results_outfile, "w") as fp:
         json.dump(output_scores, fp)

@@ -1,3 +1,5 @@
+"""Module containing class that preprocesses ClinicalTrial objects and builds features
+for model predictions."""
 import logging
 from dataclasses import asdict
 from typing import List
@@ -11,9 +13,12 @@ from trec_cds.data.parsers import parse_clinical_trials_from_folder
 
 
 class ClinicalTrialsFeatures:
-    def __init__(self, spacy_language_model: str = "en_core_sci_sm"):
+    """Class wrapping nlp spacy language model that tokenizes and removes stopwords
+    for ClinicalTrial objects"""
+
+    def __init__(self, spacy_language_model_name: str = "en_core_sci_sm"):
         self.nlp = spacy.load(
-            spacy_language_model,
+            spacy_language_model_name,
             disable=[
                 "ner",
                 "tok2vec",
@@ -23,7 +28,7 @@ class ClinicalTrialsFeatures:
                 "lemmatizer",
             ],
         )
-        logging.warning("loaded spacy language model for preprocessing Clinical Trials")
+        logging.info("loaded spacy language model for preprocessing Clinical Trials")
 
     def preprocess_clinical_trial(self, clinical_trial: ClinicalTrial) -> None:
         """Preprocesses a clinical trial text field using spacy tokenizer and removing
@@ -36,9 +41,11 @@ class ClinicalTrialsFeatures:
         ]
 
     def preprocess_text(self, text: str) -> List[str]:
-        """Preprocesses a clinical trial text field using spacy tokenizer and removing
-        stopwords. Preprocessed text is saved to a variable in the clinical_trial
-        object."""
+        """Preprocesses a custom text field using spacy tokenizer and removing
+        stopwords. Preprocessed text is returned as a List of tokenized strings.
+
+        This method can be used to obtain the same preprocessing for e.g. Topic data
+        as for ClinicalTrial."""
         preprocessed = self.nlp(text)
         return [token.text for token in preprocessed if not token.is_stop]
 

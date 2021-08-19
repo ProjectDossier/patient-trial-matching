@@ -1,3 +1,4 @@
+"""Main module contains sample usage of entity recognition methods."""
 from dataclasses import asdict
 from typing import List
 
@@ -13,10 +14,10 @@ from trec_cds.data.topic import Topic
 from trec_cds.features.ner import EntityRecognition, get_ner_model, get_displacy_options
 
 if __name__ == "__main__":
-    topic_file = "data/external/topics2021.xml"
-    clinical_trials_folder = "data/external/ClinicalTrials"
+    TOPIC_FILE = "data/external/topics2021.xml"
+    CLINICAL_TRIALS_FOLDER = "data/external/ClinicalTrials"
 
-    topics: List[Topic] = load_topics_from_xml(topic_file)
+    topics: List[Topic] = load_topics_from_xml(TOPIC_FILE)
 
     er = EntityRecognition()
     er.predict(topics=topics)
@@ -35,7 +36,7 @@ if __name__ == "__main__":
     df.to_csv("data/processed/topics.csv", index=False)
 
     cts: List[ClinicalTrial] = parse_clinical_trials_from_folder(
-        folder_name=clinical_trials_folder, first_n=100
+        folder_name=CLINICAL_TRIALS_FOLDER, first_n=100
     )
     nlp = get_ner_model(custom_ner_model_path="models/ner_age_gender-new")
 

@@ -6,6 +6,9 @@ from trec_cds.data.utils import Gender
 
 @dataclass
 class Topic:
+    """dataclass containing topic data.
+    Number and text are loaded directly from the xml file.
+    Other variables are parsed and created based on the topic's text."""
     number: int
     text: str
 

@@ -7,7 +7,10 @@ from trec_cds.data.utils import Gender
 @dataclass
 class ClinicalTrial:
     """ClinicalTrial is a wrapper class that contains most important fields
-    from the ClicnialTrials xml dump file."""
+    from the ClicnialTrials xml dump file.
+
+    text is a variable containing elements from title, description and criteria.
+    text_preprocessed contains tokenized and preprocessed text."""
 
     org_study_id: str
     nct_id: str  # primary id
