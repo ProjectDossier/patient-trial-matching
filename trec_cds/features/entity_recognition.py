@@ -12,7 +12,7 @@ from trec_cds.data.utils import Gender
 
 
 def get_displacy_options(
-        label_file: str = "data/raw/label_config.json",
+    label_file: str = "data/raw/label_config.json",
 ) -> Dict[str, List]:
     """Loads labels from a label file and creates a options dict with labels
     colours that will be used by spacy.displacy
@@ -26,7 +26,7 @@ def get_displacy_options(
     colors = {
         label[
             "text"
-        ]: f"{'#' + ''.join([random.choice('3456789ABCDEF') for i in range(6)])}"
+        ]: f"{'#' + ''.join([random.choice('3456789ABCDEF') for _ in range(6)])}"
         for label in labels
     }  # random.choice starting from 3 as we don't want too dark labels
 
@@ -34,7 +34,7 @@ def get_displacy_options(
 
 
 def get_ner_model(
-        custom_ner_model_path: str = "models/ner_age_gender/",
+    custom_ner_model_path: str = "models/ner_age_gender/",
 ) -> spacy.Language:
     """Load Named Entity Recognition spacy model that combines pre-trained
     en_ner_bc5cdr_md for Disease and Chemical
@@ -66,81 +66,81 @@ class EntityRecognition:
 
             age_entities = [ent.text for ent in doc.ents if ent.label_ == "AGE"]
             if len(age_entities) > 0:
-                topic.age = extract_age_from_entity(age_entities[0])
+                topic.age = self.extract_age_from_entity(age_entities[0])
             else:
                 topic.age = -1
 
             gender_entities = [ent.text for ent in doc.ents if ent.label_ == "GENDER"]
             if len(gender_entities) > 0:
-                topic.gender = extract_gender_from_entity(gender_entities[0])
+                topic.gender = self.extract_gender_from_entity(gender_entities[0])
             else:
-                topic.gender = extract_gender_from_text(topic.text)
+                topic.gender = self.extract_gender_from_text(topic.text)
 
         return topics
 
-
-def extract_age_from_entity(text: str) -> Union[int, float, None]:
-    """Extracts age from candidate string coming from AGE entity in spacy NER model
-    :param text: string containing entity containing age candidate
-    :return: int: patient's age. If integer is not found, functions returns None
-    """
-    match = re.search(r"(\d{1,2})[- ](month[s]?[- ]old)", text)
-    if match is not None:
-        return int(match.group(1)) / 12
-
-    match = re.search(r"(\d{1,2})[- ](day[s]?[- ]old)", text)
-    if match is not None:
-        return int(match.group(1)) / 365
-
-    match = re.search(r"\d{1,2}", text)
-    if match is not None:
-        return int(match.group(0))
-
-    return None
-
-
-def extract_gender_from_entity(text: str) -> Gender:
-    """Extracts gender from candidate string coming from GENDER entity in
-     spacy NER model.
-
-    :param text: string containing entity containing gender candidate
-    :return: Gender
-    """
-    male = ["M", "male", "boy", "man", "gentleman"]
-    female = ["F", "female", "girl", "woman", "lady"]
-
-    for pattern in male:
-        match = re.search(rf"\b{pattern}\b", text, re.IGNORECASE)
+    @staticmethod
+    def extract_age_from_entity(text: str) -> Union[int, float, None]:
+        """Extracts age from candidate string coming from AGE entity in spacy NER model
+        :param text: string containing entity containing age candidate
+        :return: int: patient's age. If integer is not found, functions returns None
+        """
+        match = re.search(r"(\d{1,2})[- ](month[s]?[- ]old)", text)
         if match is not None:
-            return Gender.male
+            return int(match.group(1)) / 12
 
-    for pattern in female:
-        match = re.search(rf"\b{pattern}\b", text, re.IGNORECASE)
+        match = re.search(r"(\d{1,2})[- ](day[s]?[- ]old)", text)
         if match is not None:
-            return Gender.female
+            return int(match.group(1)) / 365
 
-    return Gender.unknown
+        match = re.search(r"\d{1,2}", text)
+        if match is not None:
+            return int(match.group(0))
 
+        return None
 
-def extract_gender_from_text(text: str) -> Gender:
-    """Simple heuristic to estimate the gender based on count of a female/male
-    pronouns in a text.
+    @staticmethod
+    def extract_gender_from_entity(text: str) -> Gender:
+        """Extracts gender from candidate string coming from GENDER entity in
+         spacy NER model.
 
-    :param text:
-    :return:
-    """
-    male_pronoun = "he"
-    female_pronoun = "she"
+        :param text: string containing entity containing gender candidate
+        :return: Gender
+        """
+        male = ["M", "male", "boy", "man", "gentleman"]
+        female = ["F", "female", "girl", "woman", "lady"]
 
-    male_matches = re.findall(rf"\b{male_pronoun}\b", text, re.IGNORECASE)
-    female_matches = re.findall(rf"\b{female_pronoun}\b", text, re.IGNORECASE)
+        for pattern in male:
+            match = re.search(rf"\b{pattern}\b", text, re.IGNORECASE)
+            if match is not None:
+                return Gender.male
 
-    if male_matches > female_matches:
-        return Gender.male
-    elif male_matches < female_matches:
-        return Gender.female
-    else:
+        for pattern in female:
+            match = re.search(rf"\b{pattern}\b", text, re.IGNORECASE)
+            if match is not None:
+                return Gender.female
+
         return Gender.unknown
+
+    @staticmethod
+    def extract_gender_from_text(text: str) -> Gender:
+        """Simple heuristic to estimate the gender based on count of a female/male
+        pronouns in a text.
+
+        :param text:
+        :return:
+        """
+        male_pronoun = "he"
+        female_pronoun = "she"
+
+        male_matches = re.findall(rf"\b{male_pronoun}\b", text, re.IGNORECASE)
+        female_matches = re.findall(rf"\b{female_pronoun}\b", text, re.IGNORECASE)
+
+        if male_matches > female_matches:
+            return Gender.male
+        elif male_matches < female_matches:
+            return Gender.female
+        else:
+            return Gender.unknown
 
 
 if __name__ == "__main__":

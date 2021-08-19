@@ -60,8 +60,8 @@ if __name__ == "__main__":
     )
 
     feature_builder = ClinicalTrialsFeatures()
-    for clinical_trial in tqdm(cts):
-        feature_builder.preprocess_clinical_trial(clinical_trial=clinical_trial)
+    for ct in tqdm(cts):
+        feature_builder.preprocess_clinical_trial(clinical_trial=ct)
 
     df = pd.DataFrame([asdict(ct) for ct in cts])
     df.to_csv(OUTPUT_FILE, index=False)

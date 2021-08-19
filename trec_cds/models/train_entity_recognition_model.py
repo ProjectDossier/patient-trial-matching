@@ -1,24 +1,25 @@
 import json
+import os
 import random
-from pathlib import Path
 
 import numpy as np
 import spacy
 from spacy.training.example import Example
 
 
-def train_age_gender_model() -> spacy:
-    nlp = spacy.load("en_core_web_sm")
+def train_entity_recognition_model(
+    training_data_file: str, label_file: str, output_dir: str
+) -> spacy:
+    nlp = spacy.load("en_core_sci_sm")
 
     # Getting the pipeline component
     ner = nlp.get_pipe("ner")
 
-    with open("data/raw/d13asfwqUIer121213.jsonl", "r") as json_file:
+    with open(training_data_file, "r") as json_file:
         training_data = [json.loads(jline) for jline in json_file.readlines()]
-
     print(training_data)
 
-    with open("data/raw/label_config.json", "r") as json_file:
+    with open(label_file, "r") as json_file:
         labels = json.load(json_file)
 
     for label in labels:
@@ -38,10 +39,10 @@ def train_age_gender_model() -> spacy:
     with nlp.disable_pipes(*unaffected_pipes):
 
         # Training for 30 iterations
-        for iteration in range(23):
+        for iteration in range(30):
             iter_loss = []
 
-            # shuufling examples  before every iteration
+            # shuffling examples  before every iteration
             random.shuffle(TRAIN_DATA)
             losses = {}
 
@@ -50,15 +51,9 @@ def train_age_gender_model() -> spacy:
                     # create Example
                     doc = nlp.make_doc(text)
 
-                    # print(
-                    #     spacy.training.offsets_to_biluo_tags(
-                    #         nlp.make_doc(text), annotations
-                    #     )
-                    # )
                     example = Example.from_dict(doc, annotations)
                     # Update the model
                     nlp.update([example], losses=losses, drop=0.5)
-                # print("Losses", losses)
                 iter_loss.append(losses["ner"])
 
             train_loss.append(np.mean(iter_loss))
@@ -66,7 +61,9 @@ def train_age_gender_model() -> spacy:
 
     print(train_loss)
     # Save the  model to directory
-    output_dir = Path("models/ner_age_gender/")
+
+    if not os.path.isdir(output_dir):
+        os.makedirs(output_dir)
     nlp.to_disk(output_dir)
     print("Saved model to", output_dir)
 
@@ -79,7 +76,13 @@ def load_model(model_dir="models/ner_age_gender/"):
 
 
 if __name__ == "__main__":
-    nlp = train_age_gender_model()
+    TRAINING_DATA = "data/raw/d13asfwqUIer121213.jsonl"
+    LABEL_FILE = "data/raw/label_config.json"
+    OUTPUT_DIR = "models/ner_age_gender/"
+
+    nlp = train_entity_recognition_model(
+        training_data_file=TRAINING_DATA, label_file=LABEL_FILE, output_dir=OUTPUT_DIR
+    )
 
     # Testing the model
     doc = nlp(

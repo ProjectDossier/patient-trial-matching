@@ -173,7 +173,7 @@ def parse_health_status(healthy_volunteers: Union[str, None]) -> bool:
 
 
 def parse_eligibility(
-        root: ET,
+    root: ET,
 ) -> Tuple[Gender, int, int, bool, str, List[str], List[str]]:
     inclusion: List[str] = []
     exclusion: List[str] = []
@@ -219,7 +219,7 @@ def parse_eligibility(
 
 
 def parse_clinical_trials_from_folder(
-        folder_name: str, first_n: Union[None, int] = None
+    folder_name: str, first_n: Union[None, int] = None
 ) -> Union[List[ClinicalTrial], None]:
     files = [y for x in os.walk(folder_name) for y in glob(os.path.join(x[0], "*.xml"))]
 

@@ -18,6 +18,7 @@ from trec_cds.features.build_features import ClinicalTrialsFeatures
 class Indexer:
     """Wrapper around BM25Okapi class that indexes ClinicalTrials and allows for
     querying them with Topic data. input data must be preprocessed and tokenized."""
+
     index: BM25Okapi
 
     def index_clinical_trials(self, clinical_trials: List[ClinicalTrial]):
@@ -32,7 +33,7 @@ class Indexer:
         topic_scores = {}
         doc_scores = self.index.get_scores(query)
         for index, score in zip(
-                np.argsort(doc_scores)[-return_top_n:], np.sort(doc_scores)[-return_top_n:]
+            np.argsort(doc_scores)[-return_top_n:], np.sort(doc_scores)[-return_top_n:]
         ):
             topic_scores[cts[index].nct_id] = score
 

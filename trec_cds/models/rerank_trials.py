@@ -1,21 +1,38 @@
 import argparse
 import json
 import logging
+from typing import Dict, List
 
 import numpy as np
+import torch
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 
+from trec_cds.data.clinical_trial import ClinicalTrial
 from trec_cds.data.parsers import (
     load_topics_from_xml,
     parse_clinical_trials_from_folder,
 )
-import torch
+from trec_cds.data.topic import Topic
 
-device = "cuda:2" if torch.cuda.is_available() else "cpu"
+device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
 
-def reranking(result_filename: str, output_file, clinical_trials_dict, topics):
+def reranking(
+    result_filename: str,
+    output_file: str,
+    clinical_trials_dict: Dict[str, ClinicalTrial],
+    topics: List[Topic],
+):
+    """It re-ranks results from result_filename with an AllenAI specter model based on
+    eligibility criteria text match with topic text.
+
+    :param result_filename:
+    :param output_file:
+    :param clinical_trials_dict: dict of {nct_id : ClinicalTrial}
+    :param topics: list of Topic objects
+    :return:
+    """
     with open(result_filename) as fp:
         results = json.load(fp)
 
@@ -26,7 +43,6 @@ def reranking(result_filename: str, output_file, clinical_trials_dict, topics):
     total_excluded = 0
 
     output_scores = {}
-    # encoded_vectors = {}
     for topic_no in results:
         included = {}
         logging.info(topic_no)
@@ -44,11 +60,13 @@ def reranking(result_filename: str, output_file, clinical_trials_dict, topics):
                 checked += 1
 
                 if len(clinical_trial.inclusion) == 0:
+                    # if no inclusion criteria we take whole trial text
                     inclusions_encoded = model.encode([clinical_trial.text])
                 else:
                     inclusions_encoded = model.encode(clinical_trial.inclusion)
 
                 if len(clinical_trial.exclusion) == 0:
+                    # if no exclusion criteria we assume a vector with zeros
                     exclusions_encoded = np.zeros(topic_encoded.shape)
                 else:
                     exclusions_encoded = model.encode(clinical_trial.exclusion)
@@ -66,31 +84,27 @@ def reranking(result_filename: str, output_file, clinical_trials_dict, topics):
                     np.sort(topic_inclusion_similarities)[-3:]
                 ) * (1 - np.mean(np.sort(topic_exclusion_similarities)[-3:]))
 
-                if np.mean(np.sort(topic_exclusion_similarities)[-2:]) > 0.75:
+                if np.mean(np.sort(topic_exclusion_similarities)[-2:]) > 0.8:
                     print(
-                        f"discarding {nct_id}  for {topic_no} topic. {np.mean(np.sort(topic_exclusion_similarities)[-2:])}"
+                        f"discarding {nct_id} for topic {topic_no}. \
+                        {np.mean(np.sort(topic_exclusion_similarities)[-2:])}"
                     )
                     excluded_num += 1
                 else:
                     included[nct_id] = combined_score[nct_id]
 
         output_scores[topic_no] = included
-        # encoded_vectors[topic_no] = {'inclusions': inclusions_similarity, 'exclusions': exclusions_similarity}
         total_checked += checked
         total_excluded += excluded_num
-        print(
-            f"{topic_no} - {len(included)} - checked: {checked}, excluded {excluded_num}"
-        )
+        print(f"{topic_no=} - {len(included)=} - {checked=}, {excluded_num=}")
 
         if int(topic_no) % 2 == 0:
             with open(output_file, "w") as fp:
                 json.dump(output_scores, fp)
 
-            # with open("data/processed/reranking_vectors.json", "w") as fp:
-            #     json.dump(encoded_vectors, fp)
-
     print(
-        f"{total_checked} - {total_excluded} - percentage of excluded {total_excluded / total_checked}%"
+        f"{total_checked=} - {total_excluded=} - \
+         percentage of excluded {total_excluded / total_checked}%"
     )
 
     with open(output_file, "w") as fp:
