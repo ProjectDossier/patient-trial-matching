@@ -1,21 +1,31 @@
-class ClinicalTrial:
-    def __init__(
-        self,
-        org_study_id,
-        summary,
-        description,
-        criteria,
-        gender,
-        minimum_age,
-        maximum_age,
-        healthy_volunteers,
-    ):
-        self.org_study_id = org_study_id
-        self.summary = summary
-        self.description = description
+from dataclasses import dataclass
+from typing import List, Union
 
-        self.criteria = criteria
-        self.gender = gender
-        self.minimum_age = minimum_age
-        self.maximum_age = maximum_age
-        self.healthy_volunteers = healthy_volunteers
+from trec_cds.data.utils import Gender
+
+
+@dataclass
+class ClinicalTrial:
+    """ClinicalTrial is a wrapper class that contains most important fields
+    from the ClicnialTrials xml dump file.
+
+    text is a variable containing elements from title, description and criteria.
+    text_preprocessed contains tokenized and preprocessed text."""
+
+    org_study_id: str
+    nct_id: str  # primary id
+    brief_title: str
+    official_title: str
+    summary: str
+    description: str
+    criteria: str
+    inclusion: List[str]
+    exclusion: List[str]
+    gender: Gender
+    minimum_age: Union[int, float, None]
+    maximum_age: Union[int, float, None]
+    healthy_volunteers: bool  # True means accept healthy
+    text: str
+
+    # text which was preprocessed and is already tokenized
+    text_preprocessed: Union[None, List[str]] = None

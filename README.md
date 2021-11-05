@@ -6,7 +6,7 @@ TU Wien @ TREC 2021 Clinical Trials Task
 
 ## Installation
 
-Install requirements with:
+Tested with `python=3.8`. Install requirements with:
 
 ```bash
 $ pip install -r requirements.txt 
@@ -27,11 +27,18 @@ ClinicalTrials are stored with [git LFS](https://git-lfs.github.com) and after d
 
 ## Usage
 
-After successful installation and configuration of the datasets just run:
+You can test installation by running:
 
 ```bash
 $ python trec_cds/main.py
 ```
+
+### Features
+
+- Training and inference of custom entity recognition model based on spacy NER
+- Indexing with BM25
+- Postprocessing using topic and clinical trial related features
+- re-ranking using neural model and eligibility criteria
 
 ## Text annotations for named entities
 
@@ -66,6 +73,9 @@ others for consideration:
 - CXR - chest X-ray
 - SOB - shortness of breath
 
+## Next steps
+
+- detection of negation and speculation.
 
 Project Organization
 ------------
