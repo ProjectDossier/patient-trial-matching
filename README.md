@@ -9,6 +9,14 @@ TU Wien @ TREC 2021 Clinical Trials Task
 Tested with `python=3.8`. Install requirements with:
 
 ```bash
+conda create --name TREC-cds python=3.8
+```
+
+```bash
+conda activate TREC-cds
+```
+
+```bash
 $ pip install -r requirements.txt 
 ```
 
