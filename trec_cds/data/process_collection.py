@@ -45,7 +45,7 @@ def search_fields(
     rex_fields = "^.*?<{0}>(?:.*?<textblock>)?(.*?)(?:</textblock>.*?)?</{0}>.*?$"
     try:
         return re.search(rex_fields.format(field), x, re.DOTALL).groups(0)[0]
-    except:
+    except AttributeError:
         return np.nan
 
 

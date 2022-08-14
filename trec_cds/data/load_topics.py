@@ -79,8 +79,6 @@ def load_topics(
                 columns=["qid", "query"]
             )
 
-            assert (len(topics) > 0)
-
             """some special characters not supported by pt"""
             topics['query'] = topics['query'].replace(
                 '\\/|\\n|\*|\[|\]|\'|\?|:', '', regex=True
