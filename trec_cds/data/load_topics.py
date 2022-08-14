@@ -98,5 +98,5 @@ def load_topics(
             topics = add_keywords(topics)
 
         # pyterrier works with str ids
-        topics = topics.qid.astype(str)
+        topics.qid = topics.qid.astype(str)
     return topics
