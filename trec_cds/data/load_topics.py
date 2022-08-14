@@ -63,6 +63,11 @@ def load_topics(
         out_path: str = "/content/drive/MyDrive/trec_clinical_trials/data/interim/",
         add_keywords_flag: bool = True
 ):
+    """
+    load_topics takes the given topics and writes a csv table
+    if add_keywords_flag = True, it adds keybert "keywords" column.
+    If already exists, loads from file
+    """
     out_file = f"{out_path}/{file_name}.csv"
     if not exists(out_file):
         with open(f"{path}/{file_name}.xml", "r") as f:

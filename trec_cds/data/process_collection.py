@@ -13,6 +13,13 @@ def collection2jsonl(
         out_file_name: str = "clinical_trials_2021-04-27",
         out_path: str = "/content/drive/MyDrive/trec_clinical_trials/data/interim/"
 ) -> pd.DataFrame:
+    """
+    collection2jsonl reads the collection of trials from the zipped parts
+    and writes a jsonl file with a dictionary per trial
+    {docno: trail id, raw_document: raw xml as a string}.
+    If already exists, skips
+    """
+
     out_file = f"{out_path}/{out_file_name}.jsonl"
     if not exists(out_file):
         with open(out_file, "w") as f_out:
@@ -54,7 +61,15 @@ def split_collection(
             "detailed_description",
             "criteria"
         ]
-) -> pd.DataFrame:
+):
+    """
+    split_collection reads the jsonl collection with trials as
+    {docno: trail id, raw_document: raw xml as a string}
+    and writes another jsonl as
+    {docno: trail id, [cols_4_index]:[split content of the trial based on fields]}.
+    If already exists, skips
+    """
+
     out_file = f"{out_path}/{out_file_name}"
     if not exists(out_file):
         n = 1000  # chunk row size

@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict
 from tqdm import tqdm
 import pyterrier as pt
 import json
@@ -39,6 +39,11 @@ def get_retriever(
         ],
         config_top_k: int = 1000
 ):
+    """
+    get_retriever takes the split collection, indexes concatenated fields as documents
+    using pyterrier indexing and outputs the index for retrieval experiments.
+    If already exists, loads from file
+    """
     index = f"{path}/data.properties"
 
     if not exists(index):
@@ -68,7 +73,11 @@ def evaluate_experiment(
             "recip_rank",
             "P_10"
         ]
-):
+) -> Dict:
+    """
+    evaluate_experiment takes pyterrier result from retrieval experiment
+    plus qrels and evaluates given metrics using the trec_eval evaluator
+    """
     res_columns = ['qid', 'docno', 'score']
     res.qid = res.qid.astype(str)
     res.docno = res.docno.astype(str)
