@@ -97,4 +97,6 @@ def load_topics(
             add_keywords = KeywordExtraction().add_keywords
             topics = add_keywords(topics)
 
+        # pyterrier works with str ids
+        topics = topics.qid.astype(str)
     return topics
