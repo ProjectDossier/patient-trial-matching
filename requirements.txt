@@ -22,3 +22,5 @@ rank_bm25~=0.2.1
 transformers~=4.9.2
 torch~=1.9.0
 scikit-learn~=0.24.2
+keybert==0.6.0
+gensim==4.2.0
