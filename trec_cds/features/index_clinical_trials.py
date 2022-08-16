@@ -10,6 +10,7 @@ from tqdm import tqdm
 from CTnlp.clinical_trial import ClinicalTrial
 from CTnlp.parsers import parse_clinical_trials_from_folder
 from CTnlp.patient.parser import load_patients_from_xml
+from CTnlp.patient.patient import Patient
 from trec_cds.features.build_features import ClinicalTrialsFeatures
 
 
@@ -44,7 +45,7 @@ class Indexer:
 
     def save_index(self, filename: str):
         """Saves index into a pickled file."""
-        with open(filename, "rb") as _fp:
+        with open(filename, "wb") as _fp:
             pickle.dump(self.index, _fp)
 
 
@@ -102,12 +103,12 @@ if __name__ == "__main__":
     indexer.index_clinical_trials(clinical_trials=cts)
     indexer.save_index(filename=args.model_outfile)
 
-    topics = load_patients_from_xml(patient_file=args.topic_file)
+    topics: List[Patient] = load_patients_from_xml(patient_file=args.topic_file)
 
     output_scores = {}
     for topic in tqdm(topics):
-        doc = feature_builder.preprocess_text(topic.text)
-        output_scores[topic.number] = indexer.query_single(
+        doc = feature_builder.preprocess_text(topic.description)
+        output_scores[topic.patient_id] = indexer.query_single(
             query=doc, return_top_n=args.return_top_n
         )
 
