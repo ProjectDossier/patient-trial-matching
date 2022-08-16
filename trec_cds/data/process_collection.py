@@ -1,17 +1,18 @@
-import zipfile
-import pandas as pd
 import json
-from tqdm import tqdm
-from typing import List
 import re
-import numpy as np
+import zipfile
 from os.path import exists
+from typing import List
+
+import numpy as np
+import pandas as pd
+from tqdm import tqdm
 
 
 def collection2jsonl(
-        path: str = "/content/drive/MyDrive/trec_clinical_trials/data/raw/",
-        out_file_name: str = "clinical_trials_2021-04-27",
-        out_path: str = "/content/drive/MyDrive/trec_clinical_trials/data/interim/"
+    path: str = "/content/drive/MyDrive/trec_clinical_trials/data/raw/",
+    out_file_name: str = "clinical_trials_2021-04-27",
+    out_path: str = "/content/drive/MyDrive/trec_clinical_trials/data/interim/",
 ) -> pd.DataFrame:
     """
     collection2jsonl reads the collection of trials from the zipped parts
@@ -30,18 +31,13 @@ def collection2jsonl(
                         if name[-3:] == "xml":
                             entry = {
                                 "docno": name[-15:-4],
-                                "raw_document": f.read(name).decode(encoding='UTF-8')
+                                "raw_document": f.read(name).decode(encoding="UTF-8"),
                             }
-                            f_out.write(
-                                json.dumps(entry)
-                            )
+                            f_out.write(json.dumps(entry))
                             f_out.write("\n")
 
 
-def search_fields(
-        field: str,
-        x: str
-):
+def search_fields(field: str, x: str):
     rex_fields = "^.*?<{0}>(?:.*?<textblock>)?(.*?)(?:</textblock>.*?)?</{0}>.*?$"
     try:
         return re.search(rex_fields.format(field), x, re.DOTALL).groups(0)[0]
@@ -50,17 +46,17 @@ def search_fields(
 
 
 def split_collection(
-        collection: str = "clinical_trials_2021-04-27.jsonl",
-        out_path: str = "/content/drive/MyDrive/trec_clinical_trials/data/interim/",
-        out_file_name: str = "split_clinical_trials_2021-04-27.jsonl",
-        cols_4_index: List = [
-            "official_title",
-            "brief_title",
-            "condition",
-            "brief_summary",
-            "detailed_description",
-            "criteria"
-        ]
+    collection: str = "clinical_trials_2021-04-27.jsonl",
+    out_path: str = "/content/drive/MyDrive/trec_clinical_trials/data/interim/",
+    out_file_name: str = "split_clinical_trials_2021-04-27.jsonl",
+    cols_4_index: List = [
+        "official_title",
+        "brief_title",
+        "condition",
+        "brief_summary",
+        "detailed_description",
+        "criteria",
+    ],
 ):
     """
     split_collection reads the jsonl collection with trials as
@@ -98,7 +94,7 @@ def split_collection(
 
                         chunk.drop(columns=["raw_document"], inplace=True)
 
-                        chunk = chunk.to_dict('records')
+                        chunk = chunk.to_dict("records")
 
                         for i in tqdm(chunk, desc="saving"):
                             f_out.write(json.dumps(i))

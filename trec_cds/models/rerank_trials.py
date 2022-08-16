@@ -8,12 +8,11 @@ import torch
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 
-from trec_cds.data.clinical_trial import ClinicalTrial
-from trec_cds.data.parsers import (
-    load_topics_from_xml,
-    parse_clinical_trials_from_folder,
-)
-from trec_cds.data.topic import Topic
+from CTnlp.clinical_trial import ClinicalTrial
+from CTnlp.parsers import parse_clinical_trials_from_folder
+from CTnlp.patient.parser import load_patients_from_xml
+from CTnlp.patient.patient import Patient
+
 
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
@@ -22,7 +21,7 @@ def reranking(
     result_filename: str,
     output_file: str,
     clinical_trials_dict: Dict[str, ClinicalTrial],
-    topics: List[Topic],
+    topics: List[Patient],
 ):
     """It re-ranks results from result_filename with an AllenAI specter model based on
     eligibility criteria text match with topic text.
@@ -30,7 +29,7 @@ def reranking(
     :param result_filename:
     :param output_file:
     :param clinical_trials_dict: dict of {nct_id : ClinicalTrial}
-    :param topics: list of Topic objects
+    :param topics: list of Patient objects
     :return:
     """
     with open(result_filename) as fp:
@@ -49,7 +48,7 @@ def reranking(
         excluded_num = 0
         checked = 0
 
-        topic_encoded = model.encode([topics[int(topic_no) - 1].text])
+        topic_encoded = model.encode([topics[int(topic_no) - 1].description])
 
         inclusions_similarity = {}
         exclusions_similarity = {}
@@ -61,7 +60,7 @@ def reranking(
 
                 if len(clinical_trial.inclusion) == 0:
                     # if no inclusion criteria we take whole trial text
-                    inclusions_encoded = model.encode([clinical_trial.text])
+                    inclusions_encoded = model.encode([clinical_trial.text()])
                 else:
                     inclusions_encoded = model.encode(clinical_trial.inclusion)
 
@@ -146,7 +145,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    topics = load_topics_from_xml(args.topic_file)
+    topics = load_patients_from_xml(patient_file=args.topic_file)
 
     cts = parse_clinical_trials_from_folder(
         folder_name=args.clinical_trials_folder, first_n=args.first_n
