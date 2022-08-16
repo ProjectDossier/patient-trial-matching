@@ -17,7 +17,8 @@ conda activate TREC-cds
 ```
 
 ```bash
-$ pip install -r requirements.txt 
+$ pip install -r requirements.txt
+$ pip install -e clinical-trials 
 ```
 
 This will install all required packages and also this project in a devel mode.
