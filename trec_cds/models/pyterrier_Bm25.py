@@ -1,43 +1,46 @@
-from typing import List, Dict
-from tqdm import tqdm
-import pyterrier as pt
 import json
 from os.path import exists
+from typing import List, Dict
+
 import pandas as pd
+import pyterrier as pt
+from tqdm import tqdm
 
 if not pt.started():
     pt.init()
 
 
 def collection_iter(
-        path: str = "/content/drive/MyDrive/trec_clinical_trials/data/interim/",
-        collection: str = "split_clinical_trials_2021-04-27.jsonl",
-        cols_4_index: List = [
-            "official_title",
-            "brief_title",
-            "condition",
-            "brief_summary",
-            "detailed_description",
-            "criteria"
-        ]
+    path: str = "/content/drive/MyDrive/trec_clinical_trials/data/interim/",
+    collection: str = "split_clinical_trials_2021-04-27.jsonl",
+    cols_4_index: List = [
+        "official_title",
+        "brief_title",
+        "condition",
+        "brief_summary",
+        "detailed_description",
+        "criteria",
+    ],
 ):
     with open(f"{path}/{collection}", "r") as f:
         for line in tqdm(f, desc="indexing"):
             row = json.loads(line)
-            document = '\n'.join([row[i] for i in cols_4_index if row[i].__class__ == str])
-            yield {'docno': row['docno'], 'text': document}
+            document = "\n".join(
+                [row[i] for i in cols_4_index if row[i].__class__ == str]
+            )
+            yield {"docno": row["docno"], "text": document}
 
 
 def get_retriever(
-        path: str = "/content/drive/MyDrive/trec_clinical_trials/data/interim/iter_index",
-        cols_4_index: List[str] = [
-            "official_title",
-            "brief_summary",
-            "detailed_description",
-            "condition",
-            "criteria"
-        ],
-        config_top_k: int = 1000
+    path: str = "/content/drive/MyDrive/trec_clinical_trials/data/interim/iter_index",
+    cols_4_index: List[str] = [
+        "official_title",
+        "brief_summary",
+        "detailed_description",
+        "condition",
+        "criteria",
+    ],
+    config_top_k: int = 1000,
 ):
     """
     get_retriever takes the split collection, indexes concatenated fields as documents
@@ -53,11 +56,7 @@ def get_retriever(
     else:
         indexref = pt.IndexFactory.of(index)
 
-    retr_controls = {
-        "wmodel": "BM25",
-        "string.use_utf": "true",
-        "end": config_top_k
-    }
+    retr_controls = {"wmodel": "BM25", "string.use_utf": "true", "end": config_top_k}
 
     retr = pt.BatchRetrieve(indexref, controls=retr_controls)
 
@@ -65,24 +64,19 @@ def get_retriever(
 
 
 def evaluate_experiment(
-        res: pd.DataFrame,
-        qrels: pd.DataFrame,
-        metrics: List = [
-            "ndcg_cut_10",
-            "ndcg_cut_5",
-            "recip_rank",
-            "P_10"
-        ]
+    res: pd.DataFrame,
+    qrels: pd.DataFrame,
+    metrics: List = ["ndcg_cut_10", "ndcg_cut_5", "recip_rank", "P_10"],
 ) -> Dict:
     """
     evaluate_experiment takes pyterrier result from retrieval experiment
     plus qrels and evaluates given metrics using the trec_eval evaluator
     """
-    res_columns = ['qid', 'docno', 'score']
+    res_columns = ["qid", "docno", "score"]
     res.qid = res.qid.astype(str)
     res.docno = res.docno.astype(str)
 
-    qrels_columns = ['qid', 'docno', 'label']
+    qrels_columns = ["qid", "docno", "label"]
     qrels.label = qrels.label.astype(int)
     qrels.qid = qrels.qid.astype(str)
     qrels.docno = qrels.docno.astype(str)
