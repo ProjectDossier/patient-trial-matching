@@ -7,11 +7,9 @@ import numpy as np
 from rank_bm25 import BM25Okapi
 from tqdm import tqdm
 
-from trec_cds.data.clinical_trial import ClinicalTrial
-from trec_cds.data.parsers import (
-    parse_clinical_trials_from_folder,
-    load_topics_from_xml,
-)
+from CTnlp.clinical_trial import ClinicalTrial
+from CTnlp.parsers import parse_clinical_trials_from_folder
+from CTnlp.patient.parser import load_patients_from_xml
 from trec_cds.features.build_features import ClinicalTrialsFeatures
 
 
@@ -104,7 +102,7 @@ if __name__ == "__main__":
     indexer.index_clinical_trials(clinical_trials=cts)
     indexer.save_index(filename=args.model_outfile)
 
-    topics = load_topics_from_xml(topic_file=args.topic_file)
+    topics = load_patients_from_xml(patient_file=args.topic_file)
 
     output_scores = {}
     for topic in tqdm(topics):

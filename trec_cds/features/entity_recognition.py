@@ -7,8 +7,9 @@ from typing import List, Dict, Union
 import spacy
 from spacy import displacy
 
-from trec_cds.data.parsers import load_topics_from_xml
-from trec_cds.data.utils import Gender
+from CTnlp.patient.parser import load_patients_from_xml
+from CTnlp.patient.patient import Patient
+from CTnlp.utils import Gender
 
 
 def get_displacy_options(
@@ -60,9 +61,9 @@ class EntityRecognition:
         self.nlp = get_ner_model(custom_ner_model_path=custom_ner_model_path)
         print("loaded spacy language model for entity detection")
 
-    def predict(self, topics):
+    def predict(self, topics: List[Patient]):
         for topic in topics:
-            doc = self.nlp(topic.text)
+            doc = self.nlp(topic.description)
 
             age_entities = [ent.text for ent in doc.ents if ent.label_ == "AGE"]
             if len(age_entities) > 0:
@@ -74,7 +75,7 @@ class EntityRecognition:
             if len(gender_entities) > 0:
                 topic.gender = self.extract_gender_from_entity(gender_entities[0])
             else:
-                topic.gender = self.extract_gender_from_text(topic.text)
+                topic.gender = self.extract_gender_from_text(topic.description)
 
         return topics
 
@@ -145,13 +146,13 @@ class EntityRecognition:
 
 if __name__ == "__main__":
     TOPIC_FILE = "data/external/topics2021.xml"
-    topics = load_topics_from_xml(TOPIC_FILE)
+    topics = load_patients_from_xml(patient_file=TOPIC_FILE)
 
     nlp = get_ner_model(custom_ner_model_path="models/ner_age_gender-new")
 
     docs = []
     for topic in topics:
-        doc = nlp(topic.text)
+        doc = nlp(topic.description)
         docs.append(doc)
 
     options = get_displacy_options()

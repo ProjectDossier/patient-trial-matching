@@ -8,8 +8,8 @@ import pandas as pd
 import spacy
 from tqdm import tqdm
 
-from trec_cds.data.clinical_trial import ClinicalTrial
-from trec_cds.data.parsers import parse_clinical_trials_from_folder
+from CTnlp.clinical_trial import ClinicalTrial
+from CTnlp.parsers import parse_clinical_trials_from_folder
 
 
 class ClinicalTrialsFeatures:
@@ -34,7 +34,7 @@ class ClinicalTrialsFeatures:
         """Preprocesses a clinical trial text field using spacy tokenizer and removing
         stopwords. Preprocessed text is saved to a variable in the clinical_trial
         object."""
-        preprocessed = self.nlp(clinical_trial.text)
+        preprocessed = self.nlp(clinical_trial.text())
 
         clinical_trial.text_preprocessed = [
             token.text for token in preprocessed if not token.is_stop
