@@ -1,0 +1,3 @@
+[submodule "clinical-trials"]
+	path = clinical-trials
+	url = https://github.com/WojciechKusa/clinical-trials
