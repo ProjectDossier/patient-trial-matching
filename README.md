@@ -17,7 +17,8 @@ conda activate TREC-cds
 ```
 
 ```bash
-pip install -r requirements.txt 
+$ pip install -r requirements.txt
+$ pip install -e clinical-trials 
 ```
 
 [Install](https://redis.io/docs/getting-started/installation/) and launch redis server:
@@ -143,3 +144,17 @@ Project Organization
 --------
 
 <p><small>Project based on the <a target="_blank" href="https://drivendata.github.io/cookiecutter-data-science/">cookiecutter data science project template</a>. #cookiecutterdatascience</small></p>
+
+
+## Citing
+
+If you find our code useful, please cite our paper:
+
+```bibtex
+@inproceedings{kusa2021dossier,
+  title={DOSSIER at TREC 2021 Clinical Trials Track},
+  author={Kusa, Wojciech and Ghafourian, Yasin},
+  year={2021},
+  booktitle={TREC}
+}
+```

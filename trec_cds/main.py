@@ -5,12 +5,10 @@ from typing import List
 import pandas as pd
 from spacy import displacy
 
-from trec_cds.data.clinical_trial import ClinicalTrial
-from trec_cds.data.parsers import (
-    load_topics_from_xml,
-    parse_clinical_trials_from_folder,
-)
-from trec_cds.data.topic import Topic
+from CTnlp.clinical_trial import ClinicalTrial
+from CTnlp.parsers import parse_clinical_trials_from_folder
+from CTnlp.patient.parser import load_patients_from_xml
+from CTnlp.patient.patient import Patient
 from trec_cds.features.entity_recognition import (
     EntityRecognition,
     get_ner_model,
@@ -22,7 +20,7 @@ if __name__ == "__main__":
     CLINICAL_TRIALS_FOLDER = "data/external/ClinicalTrials"
     FIRST_N = 100
 
-    topics: List[Topic] = load_topics_from_xml(TOPIC_FILE)
+    topics: List[Patient] = load_patients_from_xml(TOPIC_FILE)
 
     er = EntityRecognition()
     er.predict(topics=topics)

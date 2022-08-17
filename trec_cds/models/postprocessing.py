@@ -4,13 +4,11 @@ from typing import Dict, List
 
 import pandas as pd
 
-from trec_cds.data.clinical_trial import ClinicalTrial
-from trec_cds.data.parsers import (
-    load_topics_from_xml,
-    parse_clinical_trials_from_folder,
-)
-from trec_cds.data.topic import Topic
-from trec_cds.data.utils import Gender
+from CTnlp.clinical_trial import ClinicalTrial
+from CTnlp.parsers import parse_clinical_trials_from_folder
+from CTnlp.patient.parser import load_patients_from_xml
+from CTnlp.patient.patient import Patient
+from CTnlp.utils import Gender
 from trec_cds.features.entity_recognition import EntityRecognition
 
 
@@ -18,7 +16,7 @@ def postprocessing(
     result_filename: str,
     output_file: str,
     clinical_trials_dict: Dict[str, ClinicalTrial],
-    topics: List[Topic],
+    topics: List[Patient],
 ):
     """Post processes result file by removing gender, age and health status mismatches
     between topic and clinical trial data."""
@@ -36,7 +34,7 @@ def postprocessing(
         checked = 0
 
         for nct_id, score in results[topic_no].items():
-            healthy = topics[int(topic_no) - 1].healthy
+            healthy = topics[int(topic_no) - 1].is_healthy
             gender = topics[int(topic_no) - 1].gender
             age = topics[int(topic_no) - 1].age
 
@@ -68,7 +66,7 @@ def postprocessing(
                     excluded_num += 1
                     continue
 
-                if healthy and not clinical_trial.healthy_volunteers:
+                if healthy and not clinical_trial.accepts_healthy_volunteers:
                     logging.info("trial not accepting healthy volunteers")
                     excluded_num += 1
                     continue
@@ -94,13 +92,13 @@ if __name__ == "__main__":
     clinical_trials_folder = "data/external/ClinicalTrials"
     first_stage_results_file = "data/processed/bm25-baseline-scores-4000.json"
 
-    topics = load_topics_from_xml(topic_file)
+    topics = load_patients_from_xml(patient_file=topic_file)
     er = EntityRecognition()
     er.predict(topics=topics)
 
     health_status_df = pd.read_csv("data/raw/topics-healthiness.csv")
     for topic in topics:
-        label = health_status_df[topic.number == health_status_df["index"]][
+        label = health_status_df[topic.patient_id == health_status_df["index"]][
             "label"
         ].tolist()[0]
         if label == "HEALTHY":

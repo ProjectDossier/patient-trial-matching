@@ -1,23 +1,18 @@
-from keybert import KeyBERT
-from os.path import exists
-import pandas as pd
 import re
-from gensim.parsing.preprocessing import remove_stopwords
+from os.path import exists
 from typing import Union, List
 
+import pandas as pd
+from gensim.parsing.preprocessing import remove_stopwords
+from keybert import KeyBERT
 
-class KeywordExtraction():
+
+class KeywordExtraction:
     def __init__(self):
-        kw_model = KeyBERT(
-            model="all-mpnet-base-v2"
-        )
+        kw_model = KeyBERT(model="all-mpnet-base-v2")
         self.kw_model = kw_model
 
-    def extract_keywords(
-            self,
-            text: Union[str, List[str]],
-            verbose: bool = False
-    ):
+    def extract_keywords(self, text: Union[str, List[str]], verbose: bool = False):
         if text.__class__ == str:
             text = remove_stopwords(text)
             top_n = len(text.strip().split()) // 2
@@ -29,7 +24,7 @@ class KeywordExtraction():
             top_n=top_n,
             keyphrase_ngram_range=(1, 2),
             stop_words=None,
-            diversity=0.5
+            diversity=0.5,
         )
 
         if text.__class__ == str:
@@ -46,9 +41,7 @@ class KeywordExtraction():
 
     def add_keywords(self, topics, mode: str = "dynamic_n_keys"):
         if mode == "constant_n_keys":
-            topics["keywords"] = self.extract_keywords(
-                list(topics["query"])
-            )
+            topics["keywords"] = self.extract_keywords(list(topics["query"]))
 
         elif mode == "dynamic_n_keys":
             topics["keywords"] = topics["query"].apply(
@@ -58,10 +51,10 @@ class KeywordExtraction():
 
 
 def load_topics(
-        path: str = "/content/drive/MyDrive/trec_clinical_trials/data/raw/",
-        file_name: str = "topics2021",
-        out_path: str = "/content/drive/MyDrive/trec_clinical_trials/data/interim/",
-        add_keywords_flag: bool = True
+    path: str = "/content/drive/MyDrive/trec_clinical_trials/data/raw/",
+    file_name: str = "topics2021",
+    out_path: str = "/content/drive/MyDrive/trec_clinical_trials/data/interim/",
+    add_keywords_flag: bool = True,
 ):
     """
     load_topics takes the given topics and writes a csv table
@@ -75,27 +68,25 @@ def load_topics(
             topic_re = '<topic number="(.*?)">(.*?)</topic>'
             topics = re.findall(topic_re, topics, re.DOTALL)
             topics = pd.DataFrame(
-                [(i[0], i[1]) for i in topics],
-                columns=["qid", "query"]
+                [(i[0], i[1]) for i in topics], columns=["qid", "query"]
             )
 
             """some special characters not supported by pt"""
-            topics['query'] = topics['query'].replace(
-                '\\/|\\n|\*|\[|\]|\'|\?|:', '', regex=True
+            topics["query"] = topics["query"].replace(
+                "\\/|\\n|\*|\[|\]|'|\?|:", "", regex=True
             )
 
         if add_keywords_flag:
             add_keywords = KeywordExtraction().add_keywords
-            topics = add_keywords(topics, )
+            topics = add_keywords(
+                topics,
+            )
 
         topics.to_csv(out_file, index=False)
 
     else:
         converters = {"query": str}
-        topics = pd.read_csv(
-            out_file,
-            converters=converters
-        )
+        topics = pd.read_csv(out_file, converters=converters)
         if add_keywords_flag and "keywords" not in topics.columns:
             add_keywords = KeywordExtraction().add_keywords
             topics = add_keywords(topics)
