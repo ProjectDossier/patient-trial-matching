@@ -18,6 +18,7 @@ conda activate TREC-cds
 
 ```bash
 $ pip install -r requirements.txt
+$ git submodule update --init --recursive
 $ pip install -e clinical-trials 
 ```
 
