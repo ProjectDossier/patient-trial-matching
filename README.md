@@ -21,13 +21,13 @@ $ pip install -r requirements.txt
 $ pip install -e clinical-trials 
 ```
 
+This will install all required packages and also this project in a devel mode.
+
+
 [Install](https://redis.io/docs/getting-started/installation/) and launch redis server:
 ```bash
 redis-server
 ```
-
-
-This will install all required packages and also this project in a devel mode.
 
 
 ## Data
