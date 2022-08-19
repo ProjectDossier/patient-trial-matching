@@ -228,3 +228,34 @@ class RedisInstance:
             result.append(item)
         return result
 
+    def filter_run(self, qid: List[int], docno:List[int]):
+        patient = self.get_topics(
+            qids=[qid],
+            fields=["age", "gender"]
+        )[0]
+        trial = self.get_docs(
+            docnos=[docno],
+            fields=[
+                'gender',
+                "minimum_age",
+                "maximum_age"
+            ]
+        )[0]
+
+        trial["gender"] = "A" if trial["gender"] is None else trial["gender"]
+        trial["minimum_age"] = -1 if trial["minimum_age"] is None else trial["minimum_age"]
+        trial["maximum_age"] = 100 if trial["maximum_age"] is None else trial["maximum_age"]
+
+        result = (
+            (
+                patient["gender"] == trial["gender"]
+                or
+                trial["gender"] not in ["F", "M"]
+            )
+            and
+            patient["age"] >= trial["minimum_age"]
+            and
+            patient["age"] <= trial["maximum_age"]
+        )
+
+        return result
