@@ -25,6 +25,12 @@ $ pip install -e clinical-trials
 This will install all required packages and also this project in a devel mode.
 
 
+[Install](https://redis.io/docs/getting-started/installation/) and launch redis server:
+```bash
+redis-server
+```
+
+
 ## Data
 
 Data from TREC-CDS is stored in `data/external` directory. It contains:
