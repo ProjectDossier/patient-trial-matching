@@ -21,7 +21,7 @@ class RedisInstance:
             charset="utf-8",
             decode_responses=True
         )
-        self.srt_fields = [
+        self.str_fields = [
             'org_study_id',
             'brief_title',
             'official_title',
@@ -87,7 +87,7 @@ class RedisInstance:
                 for field in fields:
                     if doc[field] in [None, nan, "nan"]:
                         continue
-                    elif field in self.srt_fields:
+                    elif field in self.str_fields:
                         if len(doc[field]) == 0:
                             continue
                     elif field in self.list_fields:
