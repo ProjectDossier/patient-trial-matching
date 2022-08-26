@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 import random
-from sklearn.utils.class_weight import compute_class_weight as c_weights
 from torch import tensor, LongTensor, FloatTensor
 from transformers import AutoTokenizer
 from typing import Dict, List, Optional
@@ -27,9 +26,9 @@ class BatchProcessing:
         random.seed(r_seed)
 
         if mode == "train":
-            self.data_spliting()
+            self.load_data()
 
-    def data_spliting(self):
+    def load_data(self):
         # todo connect redis server
         # TODO build datasets
         #  read bm25 run or take it from db
@@ -47,25 +46,7 @@ class BatchProcessing:
             ]
         )
 
-        self.data = data
-
-        if self.mode != "predict_no_labels":
-            # TODO split data by topics
-            qids = data.qid.unique()
-            random.shuffle(qids)
-
-            n_train = int(len(qids) * self.splits["train"])
-            n_val = int(len(qids) * self.splits["val"])
-            n_test = len(qids) - (n_train + n_val)
-
-            qids_train = qids[:n_train]
-            qids_val = qids[n_train: n_train + n_val]
-            qids_test = qids[-n_test:]
-
-            # TODO how to present the input to the datamodule
-            #  idea: pick all possible positive pairs from the runs
-            #  and then get hard negatives in the batch processing
-
+        if self.mode != "predict_w_no_labels":
             # TODO get qrels here
             qrels = pd.read_csv(
                 "../../data/raw/qrels_Judgment-of-0-is-non-relevant-1-is-excluded-and-2-is-eligible.txt",
@@ -88,18 +69,36 @@ class BatchProcessing:
             )
 
             data = data.fillna(0)
+            if self.mode == "train":
+                # TODO split data by topics
+                qids = data.qid.unique()
+                random.shuffle(qids)
 
-            data_train = data[data.qid.isin(qids_train)].copy()
+                n_train = int(len(qids) * self.splits["train"])
+                n_val = int(len(qids) * self.splits["val"])
+                n_test = len(qids) - (n_train + n_val)
 
-            # TODO positive examples are 1 and 2 labels for descriptive fields
-            data_train = data_train[data_train.label.isin([1, 2])]
-            self.data_train = data_train[["qid", "docno"]].values.tolist()
+                qids_train = qids[:n_train]
+                qids_val = qids[n_train: n_train + n_val]
+                qids_test = qids[-n_test:]
 
-            data_val = data[data.qid.isin(qids_val)].copy()
-            self.data_val = data_val[["qid", "docno"]].values.tolist()
+                # TODO how to present the input to the datamodule
+                #  idea: pick all possible positive pairs from the runs
+                #  and then get hard negatives in the batch processing
 
-            data_test = data[data.qid.isin(qids_test)].copy()
-            self.data_test = data_test[["qid", "docno"]].values.tolist()
+                data_train = data[data.qid.isin(qids_train)].copy()
+
+                # TODO positive examples are 1 and 2 labels for descriptive fields
+                data_train = data_train[data_train.label.isin([1, 2])]
+                self.data_train = data_train[["qid", "docno"]].values.tolist()
+
+                data_val = data[data.qid.isin(qids_val)].copy()
+                self.data_val = data_val[["qid", "docno"]].values.tolist()
+
+                data_test = data[data.qid.isin(qids_test)].copy()
+                self.data_test = data_test[["qid", "docno"]].values.tolist()
+
+            self.data = data[["qid", "docno"]].values.tolist()
 
     def tokenize_samples(self, texts):
         tokenizer = AutoTokenizer.from_pretrained(

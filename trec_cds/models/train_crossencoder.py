@@ -8,35 +8,30 @@ from pytorch_lightning.loggers import TensorBoardLogger
 
 
 if __name__ == "__main__":
-    # TODO create configurations
     with open("../../config/train_config.yml") as f:
-        config = yaml.load(f, Loader=yaml.FullLoader)["config"]
+        config = yaml.load(f, Loader=yaml.FullLoader)["curriculum_learning"]
         config = DotMap(config)
 
     data_module = ClinicalTrialsDataModule(
+        model_name=config.MODEL_NAME,
         train_batch_size=config.TRAIN_BATCH_SIZE,
-        test_batch_size=config.TEST_BATCH_SIZE,
+        eval_batch_size=config.EVAL_BATCH_SIZE,
         n_train_samples=config.N_TRAIN_SAMPLES,
         n_val_samples=config.N_VAL_SAMPLES,
         n_test_samples=config.N_TEST_SAMPLES,
     )
 
-    n_training_steps = (
-        data_module.expected_batches * config.TRAIN_BATCH_SIZE * config.N_EPOCHS
-    )
-
     model = CrossEncoder(
         model_name=config.MODEL_NAME,
-        num_labels=data_module.n_labels + 1,
+        num_labels=2,
         n_warmup_steps=config.WARMUP_STEPS,
-        n_training_steps=n_training_steps,
+        n_training_steps=data_module.n_training_steps,
         batch_size=config.TRAIN_BATCH_SIZE,
-        metric=config.TRACK_METRIC,
+        optimization_metric=config.TRACK_METRIC,
     )
 
-    # MODEL_NAME: crossencoder
     checkpoint_callback = ModelCheckpoint(
-        dirpath=f"../../models/{config.MODEL_NAME}/checkpoints",
+        dirpath=f"../../models/{config.MODEL_ALIAS}/checkpoints",
         filename="best-checkpoint",
         save_top_k=1,
         verbose=True,
@@ -46,7 +41,7 @@ if __name__ == "__main__":
 
     # LOGGER_NAME: CT_train
     logger = TensorBoardLogger(
-        save_dir=f"../../reports/{config.MODEL_NAME}_logs",
+        save_dir=f"../../reports/{config.MODEL_ALIAS}_logs",
         name=config.LOGGER_NAME
     )
 
@@ -63,8 +58,7 @@ if __name__ == "__main__":
             checkpoint_callback
         ],
         max_epochs=config.N_EPOCHS,
-        gpus=[1],
-        progress_bar_refresh_rate=1,
+        gpus=config.GPUS,
         accumulate_grad_batches=config.ACCUM_ITER,
         check_val_every_n_epoch=config.EVAL_EVERY_N_EPOCH
     )

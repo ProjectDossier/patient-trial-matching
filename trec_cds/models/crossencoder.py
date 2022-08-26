@@ -16,7 +16,7 @@ class CrossEncoder(pl.LightningModule, ABC):
         n_warmup_steps: int = None,
         batch_size: int = 16,
         pred_samples: int = None,
-        metric: str = "P_10",
+        optimization_metric: str = "P_10",
     ):
         super().__init__()
         self.n_training_steps = n_training_steps
@@ -52,8 +52,7 @@ class CrossEncoder(pl.LightningModule, ABC):
         self.softmax = nn.Softmax(dim=1)
 
         self.evaluator = Evaluator(
-            metric=metric,
-            pred_samples=pred_samples
+            optimization_metric=optimization_metric,
         )
 
     def forward(

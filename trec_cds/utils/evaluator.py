@@ -26,21 +26,34 @@ class Evaluator:
         self.write_csv = write_csv
         graded_metrics = [nDCG@10, nDCG@5]
         non_graded_metrics = [RR, P@10]
-        self.csv_headers = ["epoch"] + [str(i) for i in self.eval.keys()]
-        self.pred_samples = pred_samples
-
-        # TODO get qrels here
+        self.csv_headers = ["epoch"] + [str(i) for i in graded_metrics + non_graded_metrics]
 
         columns_mappings = {'qid': 'query_id', 'docno': 'doc_id', 'label': 'relevance'}
+
+        qrels = pd.read_csv(
+            "../../data/raw/qrels_Judgment-of-0-is-non-relevant-1-is-excluded-and-2-is-eligible.txt",
+            header=None,
+            names=[
+                "qid",
+                "Q0",
+                "docno",
+                "label",
+            ],
+            sep=" ",
+            converters={"qid": str}
+        )
 
         qrels_map = qrels.rename(
             columns=columns_mappings
             ).copy()
 
-
         self.evaluator_graded = ir_measures.evaluator(graded_metrics, qrels_map)
-        # TODO copy and modify 1-0 2-1
-        self.evaluator_non_graded = ir_measures.evaluator(non_graded_metrics, qrels_map)
+
+        qrels_map_non_graded = qrels_map.copy()
+        qrels_map_non_graded.loc[(qrels_map_non_graded.relevance == 1), "relevance"] = 0
+        qrels_map_non_graded.loc[(qrels_map_non_graded.relevance == 2), "relevance"] = 1
+
+        self.evaluator_non_graded = ir_measures.evaluator(non_graded_metrics, qrels_map_non_graded)
 
     def __call__(
         self,
