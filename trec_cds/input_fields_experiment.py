@@ -113,15 +113,22 @@ if __name__ == "__main__":
     topics: List[Patient] = load_patients_from_xml(patient_file=args.topic_file)
 
     options = [
-        "summary",
-        "eligibility",
-        "inclusion",
-        "exclusion",
-        "description",
-        "description_criteria",
-        "description_criteria_title",
-        "summary_criteria",
-        "summary_criteria_title",
+        # "summary",
+        # "eligibility",
+        # "inclusion",
+        # "exclusion",
+        # "description",
+        # "description_criteria",
+        # "description_criteria_title",
+        # "summary_criteria",
+        # "summary_criteria_title",
+        "summary_description_titles",
+        "summary_description_titles_conditions",
+        "summary_description_titles_conditions_inclusion",
+        "summary_description_titles_conditions_eligibility",
+        "brief_title",
+        "official_title",
+        "conditions"
         "all",
     ]
 
@@ -131,6 +138,10 @@ if __name__ == "__main__":
         for _clinical_trial in tqdm(cts):
             if option == "summary":
                 cts_tokenized.append(feature_builder.preprocess_text(_clinical_trial.brief_summary))
+            elif option == "brief_title":
+                cts_tokenized.append(feature_builder.preprocess_text(_clinical_trial.brief_title))
+            elif option == "official_title":
+                cts_tokenized.append(feature_builder.preprocess_text(_clinical_trial.official_title))
             elif option == "eligibility":
                 cts_tokenized.append(feature_builder.preprocess_text(_clinical_trial.criteria))
             elif option == "inclusion":
@@ -149,6 +160,20 @@ if __name__ == "__main__":
                 cts_tokenized.append(feature_builder.preprocess_text(f"{_clinical_trial.brief_summary} {_clinical_trial.criteria}"))
             elif option == "summary_criteria_title":
                 cts_tokenized.append(feature_builder.preprocess_text(f"{_clinical_trial.brief_summary} {_clinical_trial.criteria} {_clinical_trial.brief_title}"))
+            elif option == "summary_description_titles":
+                cts_tokenized.append(feature_builder.preprocess_text(
+                    f"{_clinical_trial.brief_summary} {_clinical_trial.official_title} {_clinical_trial.brief_title} {_clinical_trial.detailed_description}"))
+            elif option == "summary_description_titles_conditions":
+                cts_tokenized.append(feature_builder.preprocess_text(
+                    f"{_clinical_trial.brief_summary} {_clinical_trial.official_title} {_clinical_trial.brief_title} {_clinical_trial.detailed_description} {' '.join(_clinical_trial.conditions)}"))
+            elif option == "summary_description_titles_conditions_inclusion":
+                cts_tokenized.append(feature_builder.preprocess_text(
+                    f"{_clinical_trial.brief_summary} {_clinical_trial.official_title} {_clinical_trial.brief_title} {_clinical_trial.detailed_description} {' '.join(_clinical_trial.conditions)} {' '.join(_clinical_trial.inclusion)}"))
+            elif option == "summary_description_titles_conditions_eligibility":
+                cts_tokenized.append(feature_builder.preprocess_text(
+                    f"{_clinical_trial.brief_summary} {_clinical_trial.official_title} {_clinical_trial.brief_title} {_clinical_trial.detailed_description} {' '.join(_clinical_trial.conditions)}  {_clinical_trial.criteria}"))
+            elif option == "conditions":
+                cts_tokenized.append(feature_builder.preprocess_text(" ".join(_clinical_trial.conditions)))
             elif option == "all":
                 cts_tokenized.append(_clinical_trial.text_preprocessed)
             else:
