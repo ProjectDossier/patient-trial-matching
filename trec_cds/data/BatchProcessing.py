@@ -1,10 +1,6 @@
-import json
 import numpy as np
 import pandas as pd
 import random
-
-from os.path import join as join_path
-from sklearn.model_selection import train_test_split
 from sklearn.utils.class_weight import compute_class_weight as c_weights
 from torch import tensor, LongTensor, FloatTensor
 from transformers import AutoTokenizer
@@ -25,35 +21,41 @@ class BatchProcessing:
     ):
         self.train_batch_size = train_batch_size
         self.tokenizer_name = tokenizer_name
+        self.splits = splits
+        self.mode = mode
 
         random.seed(r_seed)
 
         if mode == "train":
-            # todo connect redis server
-            # TODO build datasets
-            #  read bm25 run or take it from db
+            self.data_spliting()
 
-            data = pd.read_csv(
-                "../../reports/DoSSIER_1.txt",
-                header=None,
-                names=[
-                    "qid",
-                    "Q0",
-                    "docno",
-                    "rank",
-                    "score",
-                    "run_id"
-                ]
-            )
+    def data_spliting(self):
+        # todo connect redis server
+        # TODO build datasets
+        #  read bm25 run or take it from db
 
-            self.data = data
+        data = pd.read_csv(
+            "../../reports/DoSSIER_1.txt",
+            header=None,
+            names=[
+                "qid",
+                "Q0",
+                "docno",
+                "rank",
+                "score",
+                "run_id"
+            ]
+        )
 
+        self.data = data
+
+        if self.mode != "predict_no_labels":
             # TODO split data by topics
             qids = data.qid.unique()
             random.shuffle(qids)
 
-            n_train = int(len(qids) * splits["train"])
-            n_val = int(len(qids) * splits["val"])
+            n_train = int(len(qids) * self.splits["train"])
+            n_val = int(len(qids) * self.splits["val"])
             n_test = len(qids) - (n_train + n_val)
 
             qids_train = qids[:n_train]
@@ -91,12 +93,59 @@ class BatchProcessing:
 
             # TODO positive examples are 1 and 2 labels for descriptive fields
             data_train = data_train[data_train.label.isin([1, 2])]
-            data_train = data_train[["qid", "docno"]].values.tolist()
+            self.data_train = data_train[["qid", "docno"]].values.tolist()
 
             data_val = data[data.qid.isin(qids_val)].copy()
-            data_val = data_val[["qid", "docno"]].values.tolist()
+            self.data_val = data_val[["qid", "docno"]].values.tolist()
 
             data_test = data[data.qid.isin(qids_test)].copy()
-            data_test = data_test[["qid", "docno"]].values.tolist()
+            self.data_test = data_test[["qid", "docno"]].values.tolist()
+
+    def tokenize_samples(self, texts):
+        tokenizer = AutoTokenizer.from_pretrained(
+            self.tokenizer_name,
+            model_max_length=512
+        )
+
+        tokenized_text = tokenizer.batch_encode_plus(
+            texts,
+            padding=True,
+            truncation='only_second',
+            return_tensors="pt",
+            add_special_tokens=True,
+            return_token_type_ids=True,
+        )
+
+        return tokenized_text
+
+    def build_train_batch(self, sample_ids: List):
+
+        queries = self.db.get_queries(sample_ids)
+
+        p_examples, n_examples = [], []
+
+        # TODO get text for positive examples and add hard negatives from bm25 runs
+        #   why not to use only samples from qrels
+        #  - to have control over the complete experiment
+
+        p_examples = p_examples[:self.batch_size // 2]
+        n_examples = n_examples[:self.batch_size // 2]
+
+        batch = p_examples + n_examples
+
+        batch, labels, sample_ids = self.build_pred_batch(batch)
+
+        return batch, labels, sample_ids
+
+    def build_eval_batch(self, sample_ids: List):
+        batch = list(self.test.loc[sample_ids].text)
+        batch = self.tokenize_samples(batch)
+        try:
+            labels = list(self.test.loc[sample_ids].label)
+        except AttributeError:
+            labels = [-1] * len(sample_ids)
+        return batch, labels, sample_ids
 
 
+if __name__== "__main__":
+    BatchProcessing()
