@@ -7,9 +7,27 @@ from typing import List, Dict, Union
 import spacy
 from spacy import displacy
 
-from CTnlp.patient.parser import load_patients_from_xml
-from CTnlp.patient.patient import Patient
+from CTnlp.patient import load_patients_from_xml
+from CTnlp.patient import Patient
 from CTnlp.utils import Gender
+
+
+def normalise_smoking(negated_entities, positive_entities):
+    if "smoke" in negated_entities:
+        return False
+
+    if "smoke" in positive_entities:
+        return True
+    return None
+
+def normalise_drinking(negated_entities, positive_entities):
+    if "alcohol" in negated_entities:
+        return False
+
+    if "alcohol" in positive_entities:
+        return True
+    return None
+
 
 
 def get_displacy_options(
