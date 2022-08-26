@@ -2,8 +2,8 @@ import json
 from dataclasses import asdict
 from typing import List
 
-from CTnlp.patient import load_patients_from_xml
 from CTnlp.patient import Patient
+from CTnlp.patient import load_patients_from_xml
 from trec_cds.features.drug_disease_extraction import EntityExtraction
 
 ee_model = EntityExtraction()
