@@ -1,5 +1,5 @@
 ---
-curriculum_learning:
+easy:
   SEED : 42
   TRAIN_BATCH_SIZE : 2
   EVAL_BATCH_SIZE: 2
@@ -26,5 +26,9 @@ curriculum_learning:
   QUERY_REPR: "description"
   PATH_2_RUN: "../../reports/DoSSIER_1.txt"
   PATH_2_QRELS: "../../data/raw/qrels_Judgment-of-0-is-non-relevant-1-is-excluded-and-2-is-eligible.txt"
+  RELEVANT_LABELS: [1, 2]
+
+difficult:
+  RELEVANT_LABELS: [2]
 
 

@@ -11,6 +11,7 @@ class BatchProcessing:
         self,
         fields: List[str],
         query_repr: str,
+        relevant_labels: List[int],
         path_to_run: str,
         path_to_qrels: str,
         mode: str = "train",
@@ -21,7 +22,7 @@ class BatchProcessing:
         n_val_samples: Optional[int] = None,
         n_test_samples: Optional[int] = None,
     ):
-        # TODO truncate runs for debugging (evaluation)
+
         self.train_batch_size = train_batch_size
         self.tokenizer_name = tokenizer_name
         self.splits = splits
@@ -30,6 +31,7 @@ class BatchProcessing:
         self.n_test_samples = n_test_samples
         self.fields = fields
         self.query_repr = query_repr
+        self.relevant_labels = relevant_labels
         self.path_to_run = path_to_run
         self.path_to_qrels = path_to_qrels
 
@@ -93,8 +95,7 @@ class BatchProcessing:
 
                 data_train = data[data.qid.isin(qids_train)].copy()
 
-                # TODO positive examples are 1 and 2 labels for descriptive fields
-                data_train = data_train[data_train.label.isin([1, 2])]
+                data_train = data_train[data_train.label.isin(self.relevant_labels)]
                 self.data_train = data_train[["qid", "docno"]].values.tolist()
 
                 data_val = data[data.qid.isin(qids_val)].copy()

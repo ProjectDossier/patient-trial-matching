@@ -16,5 +16,6 @@ curriculum_learning:
       'detailed_description'
   ]
   QUERY_REPR: "description"
+  RELEVANT_LABELS: [1, 2]
   PATH_2_RUN: "../../reports/DoSSIER_1.txt"
   PATH_2_QRELS: "../../data/raw/qrels_Judgment-of-0-is-non-relevant-1-is-excluded-and-2-is-eligible.txt"

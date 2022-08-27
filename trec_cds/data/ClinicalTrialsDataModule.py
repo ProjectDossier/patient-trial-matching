@@ -11,6 +11,7 @@ class ClinicalTrialsDataModule(pl.LightningDataModule, ABC):
         model_name: str,
         fields: List[str],
         query_repr: str,
+        relevant_labels: List[int],
         path_to_run: str,
         path_to_qrels: str,
         train_batch_size: Optional[int] = None,
@@ -35,6 +36,7 @@ class ClinicalTrialsDataModule(pl.LightningDataModule, ABC):
         batch_processing = BatchProcessing(
             fields=fields,
             query_repr=query_repr,
+            relevant_labels=relevant_labels,
             train_batch_size=train_batch_size,
             n_val_samples=n_val_samples,
             n_test_samples=n_test_samples,

@@ -7,7 +7,7 @@ import yaml
 
 if __name__ == "__main__":
     with open("../../config/prediction_config.yml") as f:
-        config = yaml.load(f, Loader=yaml.FullLoader)["curriculum_learning"]  # name of the configuration
+        config = yaml.load(f, Loader=yaml.FullLoader)["easy"]  # name of the configuration
         config = DotMap(config)
 
     data_module = ClinicalTrialsDataModule(
@@ -17,6 +17,7 @@ if __name__ == "__main__":
         mode=config.MODE,
         fields=config.FIELDS,
         query_repr=config.QUERY_REPR,
+        relevant_labels=config.RELEVANT_LABELS,
         path_to_run=config.PATH_2_RUN,
         path_to_qrels=config.PATH_2_QRELS
     )
