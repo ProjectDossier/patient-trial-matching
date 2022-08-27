@@ -2,13 +2,13 @@
 curriculum_learning:
   SEED : 42
   TRAIN_BATCH_SIZE : 2
-  EVAL_BATCH_SIZE: 4
-  N_TRAIN_SAMPLES: 8
+  EVAL_BATCH_SIZE: 2
+  N_TRAIN_SAMPLES: 4
   N_VAL_SAMPLES: 2
   N_TEST_SAMPLES: 2
   MODEL_NAME: "bert-base-uncased"
   WARMUP_STEPS: 0
-  MODEL_ALIAS: crossencoder
+  MODEL_ALIAS: "crossencoder"
   LOGGER_NAME: "crossencoder"
   TRACK_METRIC: P@10
   PATIENCE: 5
@@ -16,5 +16,14 @@ curriculum_learning:
   ACCUM_ITER : null
   EVAL_EVERY_N_EPOCH : 1
   GPUS: null
+  FIELDS: [
+      'conditions',
+      'brief_title',
+      'official_title',
+      'brief_summary',
+      'detailed_description'
+  ]
+  PATH_2_RUN: "../../reports/DoSSIER_1.txt"
+  PATH_2_QRELS: "../../data/raw/qrels_Judgment-of-0-is-non-relevant-1-is-excluded-and-2-is-eligible.txt"
 
 

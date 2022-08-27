@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Optional
+from typing import Optional, List
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 from .BatchProcessing import BatchProcessing
@@ -9,6 +9,9 @@ class ClinicalTrialsDataModule(pl.LightningDataModule, ABC):
     def __init__(
         self,
         model_name: str,
+        fields: List[str],
+        path_to_run: str,
+        path_to_qrels: str,
         train_batch_size: Optional[int] = None,
         eval_batch_size: Optional[int] = 16,
         n_train_samples: int = 1024,
@@ -29,11 +32,14 @@ class ClinicalTrialsDataModule(pl.LightningDataModule, ABC):
         super().__init__()
 
         batch_processing = BatchProcessing(
+            fields=fields,
             train_batch_size=train_batch_size,
             n_val_samples=n_val_samples,
             n_test_samples=n_test_samples,
             mode=mode,
-            tokenizer_name=model_name
+            tokenizer_name=model_name,
+            path_to_run=path_to_run,
+            path_to_qrels=path_to_qrels
         )
 
         if mode in ["train"]:

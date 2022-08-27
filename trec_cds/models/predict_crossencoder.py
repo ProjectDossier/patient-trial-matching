@@ -15,6 +15,9 @@ if __name__ == "__main__":
         n_test_samples=config.N_SAMPLES,
         model_name=config.MODEL_NAME,
         mode=config.MODE,
+        fields=config.FIELDS,
+        path_to_run=config.PATH_2_RUN,
+        path_to_qrels=config.PATH_2_QRELS
     )
 
     model = CrossEncoder.load_from_checkpoint(

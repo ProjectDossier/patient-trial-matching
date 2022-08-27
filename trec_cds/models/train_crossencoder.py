@@ -19,6 +19,9 @@ if __name__ == "__main__":
         n_train_samples=config.N_TRAIN_SAMPLES,
         n_val_samples=config.N_VAL_SAMPLES,
         n_test_samples=config.N_TEST_SAMPLES,
+        fields=config.FIELDS,
+        path_to_run=config.PATH_2_RUN,
+        path_to_qrels=config.PATH_2_QRELS
     )
 
     model = CrossEncoder(
@@ -70,5 +73,3 @@ if __name__ == "__main__":
     trainer.test(
         dataloaders=data_module.test_dataloader()
     )
-
-    # TODO define further training

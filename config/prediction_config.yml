@@ -8,3 +8,11 @@ curriculum_learning:
   CHECKPOINT: "best-checkpoint-v1.ckpt"
   GPUS: null
   MODE: "predict_w_labels"
+  FIELDS: [
+      'conditions',
+      'brief_title',
+      'official_title',
+      'brief_summary',
+      'detailed_description'
+  ]
+  PATH_2_RUN: "../../reports/DoSSIER_1.txt"
