@@ -5,38 +5,35 @@ from trec_cds.data.ClinicalTrialsDataModule import ClinicalTrialsDataModule
 from pytorch_lightning.loggers import TensorBoardLogger
 import yaml
 
+if __name__ == "__main__":
+    with open("../../config/prediction_config.yml") as f:
+        config = yaml.load(f, Loader=yaml.FullLoader)["curriculum_learning"]  # name of the configuration
+        config = DotMap(config)
 
-with open("../../config/prediction_config.yml") as f:
-    config = yaml.load(f, Loader=yaml.FullLoader)[experiment]  # name of the configuration
-    config = DotMap(config)
+    data_module = ClinicalTrialsDataModule(
+        eval_batch_size=config.BATCH_SIZE,
+        n_test_samples=config.N_SAMPLES,
+        model_name=config.MODEL_NAME,
+        mode=config.MODE,
+    )
 
+    model = CrossEncoder.load_from_checkpoint(
+        checkpoint_path=f"../../models/{config.MODEL_ALIAS}/checkpoints/{config.CHECKPOINT}",
+        model_name=config.MODEL_NAME,
+        num_labels=2
+    )
 
-data_module = ClinicalTrialsDataModule(
-    eval_batch_size=config.TEST_BATCH_SIZE,
-    n_test_samples=config.N_TEST_SAMPLES,
-    mode="prediction"
-)
+    logger = TensorBoardLogger(
+        save_dir=f"../../reports/{config.MODEL_ALIAS}_pred_logs",
+        name=config.LOGGER_NAME
+    )
 
-# MODEL_NAME: crossencoder
-model = CrossEncoder.load_from_checkpoint(
-    checkpoint_path=f"../../models/{config.MODEL_NAME}/checkpoints/{config.CHECKPOINT}",
-    model_name=config.MODEL_NAME,
-    num_labels=2,
-    pred_samples=data_module.pred_samples
-)
+    trainer = pl.Trainer(
+        logger=logger,
+        gpus=config.GPUS
+    )
 
-# LOGGER_NAME: CT_preds
-logger = TensorBoardLogger(
-    save_dir=f"../../reports/{config.MODEL_NAME}_logs",
-    name=config.LOGGER_NAME
-)
-
-trainer = pl.Trainer(
-    logger=logger,
-    gpus=[1]
-)
-
-trainer.predict(
-    model=model,
-    dataloaders=data_module.predict_dataloader()
-)
+    trainer.predict(
+        model=model,
+        dataloaders=data_module.predict_dataloader()
+    )

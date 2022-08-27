@@ -102,6 +102,8 @@ class BatchProcessing:
                     self.data_test = truncate_rank(qids_test, self.data_test, self.n_test_samples)
 
             self.data = data[["qid", "docno"]].values.tolist()
+            if self.n_test_samples is not None:
+                self.data = truncate_rank(data.qid.unique(), self.data, self.n_test_samples)
 
     def tokenize_samples(self, texts):
         tokenizer = AutoTokenizer.from_pretrained(

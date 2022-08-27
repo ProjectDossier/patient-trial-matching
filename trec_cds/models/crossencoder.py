@@ -17,7 +17,6 @@ class CrossEncoder(pl.LightningModule, ABC):
         n_training_steps: int = None,
         n_warmup_steps: int = None,
         batch_size: int = 16,
-        pred_samples: int = None,
         optimization_metric: str = P@10,
     ):
         super().__init__()
