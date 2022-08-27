@@ -9,7 +9,10 @@ import time
 class BatchProcessing:
     def __init__(
         self,
-        path: str = "../../data/raw/",
+        fields: List[str],
+        query_repr: str,
+        path_to_run: str,
+        path_to_qrels: str,
         mode: str = "train",
         splits: Dict = {"train": 0.60, "val": 0.10, "test": 0.30},
         r_seed: int = 42,
@@ -25,6 +28,10 @@ class BatchProcessing:
         self.mode = mode
         self.n_val_samples = n_val_samples
         self.n_test_samples = n_test_samples
+        self.fields = fields
+        self.query_repr = query_repr
+        self.path_to_run = path_to_run
+        self.path_to_qrels = path_to_qrels
 
         random.seed(r_seed)
 
@@ -36,7 +43,7 @@ class BatchProcessing:
     def load_data(self):
 
         data = pd.read_csv(
-            "../../reports/DoSSIER_1.txt",
+            self.path_to_run,
             header=None,
             names=[
                 "qid",
@@ -49,9 +56,8 @@ class BatchProcessing:
         )
 
         if self.mode != "predict_w_no_labels":
-            # TODO get qrels here
             qrels = pd.read_csv(
-                "../../data/raw/qrels_Judgment-of-0-is-non-relevant-1-is-excluded-and-2-is-eligible.txt",
+                self.path_to_qrels,
                 header=None,
                 names=[
                     "qid",
@@ -127,26 +133,18 @@ class BatchProcessing:
         unique_qids = list(set(qids))
         topics = self.db.get_topics(
             unique_qids,
-            ["query"]
+            [self.query_repr]
         )
 
         topics_dict = {}
         for qid, query in zip(unique_qids, topics):
             topics_dict.update({qid: query})
-        # TODO: parameterize fields?
-        fields = [
-            'conditions',
-            'brief_title',
-            'official_title',
-            'brief_summary',
-            'detailed_description',
-        ]
 
         docnos = [i[1] for i in sample_ids]
         unique_docnos = list(set(docnos))
         docs = self.db.get_docs(
             unique_docnos,
-            fields
+            self.fields
         )
 
         docs_dict = {}
@@ -155,11 +153,11 @@ class BatchProcessing:
 
         sample_texts = []
         for qid, docno in sample_ids:
-            query = topics_dict[qid]["query"]
+            query = topics_dict[qid][self.query_repr]
             doc = docs_dict[docno]
             doc = " ".join(
                 flatten_list(
-                    [doc[i] for i in fields if doc[i] is not None]
+                    [doc[i] for i in self.fields if doc[i] is not None]
                 )
             )
 

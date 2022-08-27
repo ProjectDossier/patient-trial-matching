@@ -16,6 +16,7 @@ if __name__ == "__main__":
         model_name=config.MODEL_NAME,
         mode=config.MODE,
         fields=config.FIELDS,
+        query_repr=config.QUERY_REPR,
         path_to_run=config.PATH_2_RUN,
         path_to_qrels=config.PATH_2_QRELS
     )

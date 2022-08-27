@@ -20,6 +20,7 @@ if __name__ == "__main__":
         n_val_samples=config.N_VAL_SAMPLES,
         n_test_samples=config.N_TEST_SAMPLES,
         fields=config.FIELDS,
+        query_repr=config.QUERY_REPR,
         path_to_run=config.PATH_2_RUN,
         path_to_qrels=config.PATH_2_QRELS
     )
@@ -30,7 +31,7 @@ if __name__ == "__main__":
         n_warmup_steps=config.WARMUP_STEPS,
         n_training_steps=data_module.n_training_steps,
         batch_size=config.TRAIN_BATCH_SIZE,
-        optimization_metric=config.TRACK_METRIC,
+        optimization_metric=config.TRACK_METRIC
     )
 
     checkpoint_callback = ModelCheckpoint(
