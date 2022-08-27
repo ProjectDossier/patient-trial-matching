@@ -3,7 +3,6 @@ import random
 from transformers import AutoTokenizer
 from typing import Dict, List, Optional
 from trec_cds.data.redis_instance import RedisInstance
-import time
 
 
 class BatchProcessing:
@@ -37,7 +36,6 @@ class BatchProcessing:
 
         random.seed(r_seed)
 
-        time.sleep(60)
         self.db = RedisInstance()
 
         self.load_data()

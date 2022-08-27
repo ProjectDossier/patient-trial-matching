@@ -1,5 +1,5 @@
 ---
-curriculum_learning:
+easy:
   BATCH_SIZE: 2
   N_SAMPLES: 4
   MODEL_NAME: "bert-base-uncased"

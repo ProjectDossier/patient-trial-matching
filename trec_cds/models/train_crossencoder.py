@@ -9,7 +9,7 @@ from pytorch_lightning.loggers import TensorBoardLogger
 
 if __name__ == "__main__":
     with open("../../config/train_config.yml") as f:
-        config = yaml.load(f, Loader=yaml.FullLoader)["curriculum_learning"]
+        config = yaml.load(f, Loader=yaml.FullLoader)["easy"]
         config = DotMap(config)
 
     data_module = ClinicalTrialsDataModule(
