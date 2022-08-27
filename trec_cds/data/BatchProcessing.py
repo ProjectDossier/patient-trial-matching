@@ -1,9 +1,9 @@
-import numpy as np
 import pandas as pd
 import random
-from torch import tensor, LongTensor, FloatTensor
 from transformers import AutoTokenizer
 from typing import Dict, List, Optional
+from trec_cds.data.redis_instance import RedisInstance
+import time
 
 
 class BatchProcessing:
@@ -18,20 +18,22 @@ class BatchProcessing:
         n_val_samples: Optional[int] = None,
         n_test_samples: Optional[int] = None,
     ):
+        # TODO truncate runs for debugging (evaluation)
         self.train_batch_size = train_batch_size
         self.tokenizer_name = tokenizer_name
         self.splits = splits
         self.mode = mode
+        self.n_val_samples = n_val_samples
+        self.n_test_samples = n_test_samples
 
         random.seed(r_seed)
 
-        if mode == "train":
-            self.load_data()
+        time.sleep(60)
+        self.db = RedisInstance()
+
+        self.load_data()
 
     def load_data(self):
-        # todo connect redis server
-        # TODO build datasets
-        #  read bm25 run or take it from db
 
         data = pd.read_csv(
             "../../reports/DoSSIER_1.txt",
@@ -68,9 +70,10 @@ class BatchProcessing:
                 how="left"
             )
 
+            self.reference_run = data.copy()
+
             data = data.fillna(0)
             if self.mode == "train":
-                # TODO split data by topics
                 qids = data.qid.unique()
                 random.shuffle(qids)
 
@@ -82,10 +85,6 @@ class BatchProcessing:
                 qids_val = qids[n_train: n_train + n_val]
                 qids_test = qids[-n_test:]
 
-                # TODO how to present the input to the datamodule
-                #  idea: pick all possible positive pairs from the runs
-                #  and then get hard negatives in the batch processing
-
                 data_train = data[data.qid.isin(qids_train)].copy()
 
                 # TODO positive examples are 1 and 2 labels for descriptive fields
@@ -94,9 +93,13 @@ class BatchProcessing:
 
                 data_val = data[data.qid.isin(qids_val)].copy()
                 self.data_val = data_val[["qid", "docno"]].values.tolist()
+                if self.n_val_samples is not None:
+                    self.data_val = truncate_rank(qids_val, self.data_val, self.n_val_samples)
 
                 data_test = data[data.qid.isin(qids_test)].copy()
                 self.data_test = data_test[["qid", "docno"]].values.tolist()
+                if self.n_test_samples is not None:
+                    self.data_test = truncate_rank(qids_test, self.data_test, self.n_test_samples)
 
             self.data = data[["qid", "docno"]].values.tolist()
 
@@ -117,34 +120,96 @@ class BatchProcessing:
 
         return tokenized_text
 
+    def build_batch(self, sample_ids: List):
+        qids = [i[0] for i in sample_ids]
+        unique_qids = list(set(qids))
+        topics = self.db.get_topics(
+            unique_qids,
+            ["query"]
+        )
+
+        topics_dict = {}
+        for qid, query in zip(unique_qids, topics):
+            topics_dict.update({qid: query})
+        # TODO: parameterize fields?
+        fields = [
+            'conditions',
+            'brief_title',
+            'official_title',
+            'brief_summary',
+            'detailed_description',
+        ]
+
+        docnos = [i[1] for i in sample_ids]
+        unique_docnos = list(set(docnos))
+        docs = self.db.get_docs(
+            unique_docnos,
+            fields
+        )
+
+        docs_dict = {}
+        for docno, doc in zip(unique_docnos, docs):
+            docs_dict.update({docno: doc})
+
+        sample_texts = []
+        for qid, docno in sample_ids:
+            query = topics_dict[qid]["query"]
+            doc = docs_dict[docno]
+            doc = " ".join(
+                flatten_list(
+                    [doc[i] for i in fields if doc[i] is not None]
+                )
+            )
+
+            sample_texts.append(
+                [
+                    query,
+                    doc
+                ]
+            )
+
+        batch = self.tokenize_samples(sample_texts)
+        return batch, qids, docnos
+
     def build_train_batch(self, sample_ids: List):
 
-        queries = self.db.get_queries(sample_ids)
+        # random sample from the batch pool
+        random.shuffle(sample_ids)
+        positives = sample_ids[: self.train_batch_size // 2]
 
-        p_examples, n_examples = [], []
+        # picking hard negatives from reference run
+        run = self.reference_run
+        negatives = []
+        for qid, docno in positives:
+            negative_list = run[
+                                (run.qid == qid) & (run.label == 0)
+                                ].docno.values.tolist()[0:100]
+            random.shuffle(negative_list)
+            negatives.append([qid, negative_list[0]])
 
-        # TODO get text for positive examples and add hard negatives from bm25 runs
-        #   why not to use only samples from qrels
-        #  - to have control over the complete experiment
+        sample_ids = positives + negatives
 
-        p_examples = p_examples[:self.batch_size // 2]
-        n_examples = n_examples[:self.batch_size // 2]
+        batch, _, _ = self.build_batch(sample_ids)
 
-        batch = p_examples + n_examples
-
-        batch, labels, sample_ids = self.build_pred_batch(batch)
-
-        return batch, labels, sample_ids
-
-    def build_eval_batch(self, sample_ids: List):
-        batch = list(self.test.loc[sample_ids].text)
-        batch = self.tokenize_samples(batch)
-        try:
-            labels = list(self.test.loc[sample_ids].label)
-        except AttributeError:
-            labels = [-1] * len(sample_ids)
-        return batch, labels, sample_ids
+        return batch
 
 
-if __name__== "__main__":
-    BatchProcessing()
+def flatten_list(lst):
+    flst = []
+    for i in lst:
+        if isinstance(i, list):
+            flst.extend(flatten_list(i))
+        else:
+            flst.append(i)
+    return flst
+
+
+def truncate_rank(qids, data, n_samples):
+    data_val = []
+    for qid in qids:
+        for idx, pair in enumerate([pair for pair in data if pair[0] == qid]):
+            if idx == n_samples:
+                break
+            data_val.append(pair)
+
+    return data_val

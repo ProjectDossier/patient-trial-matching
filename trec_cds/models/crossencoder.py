@@ -5,6 +5,8 @@ from trec_cds.utils.evaluator import Evaluator
 from torch import nn, split
 from transformers import AdamW, AutoConfig, AutoModel, get_linear_schedule_with_warmup
 from trec_cds.utils.loss import PairwiseHingLoss
+from ir_measures import *
+import ir_measures
 
 
 class CrossEncoder(pl.LightningModule, ABC):
@@ -16,7 +18,7 @@ class CrossEncoder(pl.LightningModule, ABC):
         n_warmup_steps: int = None,
         batch_size: int = 16,
         pred_samples: int = None,
-        optimization_metric: str = "P_10",
+        optimization_metric: str = P@10,
     ):
         super().__init__()
         self.n_training_steps = n_training_steps
@@ -52,7 +54,7 @@ class CrossEncoder(pl.LightningModule, ABC):
         self.softmax = nn.Softmax(dim=1)
 
         self.evaluator = Evaluator(
-            optimization_metric=optimization_metric,
+            optimization_metric=ir_measures.parse_measure(optimization_metric),
         )
 
     def forward(
@@ -104,7 +106,7 @@ class CrossEncoder(pl.LightningModule, ABC):
         return loss_value
 
     def eval_batch(self, batch):
-        batch, labels, ids = batch
+        batch, qids, docnos = batch
 
         preds = self(
             batch["input_ids"],
@@ -112,29 +114,29 @@ class CrossEncoder(pl.LightningModule, ABC):
             batch["token_type_ids"]
         )
 
-        return {"id": ids, "prediction": preds, "labels": labels}
+        return {"qid": qids, "docno": docnos, "prediction": preds}
 
     def eval_epoch(self, outputs, name, epoch=-1):
-        ids, labels, preds = [], [], []
+        qids, docnos, preds = [], [], []
         if name == "pred":
             outputs = outputs[0]
         for output in outputs:
-            ids.extend(output["id"])
-            labels.extend(output["labels"])
+            qids.extend(output["qid"])
+            docnos.extend(output["docno"])
             preds.append(output["prediction"].cpu().detach().numpy())
 
         preds = np.concatenate(preds, 0)
 
         eval = self.evaluator(
-            ids=ids,
-            labels=labels,
+            qids=qids,
+            docnos=docnos,
             pred_scores=preds,
             epoch=epoch,
             out_f_name=name
         )
 
         for metric, value in eval.items():
-            self.log(metric, value, prog_bar=True, logger=True)
+            self.log(str(metric), value, prog_bar=True, logger=True)
 
     def validation_step(self, batch, batch_idx):
         return self.eval_batch(batch)

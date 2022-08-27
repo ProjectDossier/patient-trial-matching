@@ -39,9 +39,8 @@ if __name__ == "__main__":
         mode="max",
     )
 
-    # LOGGER_NAME: CT_train
     logger = TensorBoardLogger(
-        save_dir=f"../../reports/{config.MODEL_ALIAS}_logs",
+        save_dir=f"../../reports/{config.MODEL_ALIAS}_train_logs",
         name=config.LOGGER_NAME
     )
 

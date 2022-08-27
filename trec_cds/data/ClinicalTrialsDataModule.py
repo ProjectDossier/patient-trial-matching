@@ -51,18 +51,18 @@ class ClinicalTrialsDataModule(pl.LightningDataModule, ABC):
             self.eval_batch_size = eval_batch_size
 
             self.train_batch_processing = batch_processing.build_train_batch
-            self.eval_batch_processing = batch_processing.build_eval_batch
+            self.eval_batch_processing = batch_processing.build_batch
 
         elif mode in ["predict_w_labels", "pred_w_no_labels"]:
             self.data_test = batch_processing.data
             self.pred_batch_size = eval_batch_size
-            self.pred_batch_processing = batch_processing.build_eval_batch
+            self.pred_batch_processing = batch_processing.build_batch
 
     def train_dataloader(self):
         return DataLoader(
             self.data_train,
             batch_size=self.train_pool_batch_size,
-            shuffle=False,
+            shuffle=True,
             collate_fn=self.train_batch_processing,
         )
 
@@ -70,7 +70,7 @@ class ClinicalTrialsDataModule(pl.LightningDataModule, ABC):
         return DataLoader(
             self.data_val,
             batch_size=self.eval_batch_size,
-            collate_fn=self.eval_batch_processing,
+            collate_fn=self.eval_batch_processing
         )
 
     def test_dataloader(self):
