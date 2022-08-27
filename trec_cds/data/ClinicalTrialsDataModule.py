@@ -38,7 +38,7 @@ class ClinicalTrialsDataModule(pl.LightningDataModule, ABC):
 
         if mode in ["train"]:
 
-            self.n_training_steps = n_train_samples // (train_batch_size // 2)
+            self.n_training_steps = n_train_samples // train_batch_size
 
             self.train_pool_batch_size = int(
                 batch_processing.data_train.__len__() // self.n_training_steps
