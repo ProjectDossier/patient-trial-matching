@@ -1,21 +1,21 @@
 ---
 easy:
   SEED : 42
-  TRAIN_BATCH_SIZE : 2
-  EVAL_BATCH_SIZE: 2
-  N_TRAIN_SAMPLES: 4
-  N_VAL_SAMPLES: 2
-  N_TEST_SAMPLES: 2
+  TRAIN_BATCH_SIZE : 16
+  EVAL_BATCH_SIZE: 256
+  N_TRAIN_SAMPLES: 8192
+  N_VAL_SAMPLES: 100
+  N_TEST_SAMPLES: null
   MODEL_NAME: "bert-base-uncased"
   WARMUP_STEPS: 0
   MODEL_ALIAS: "crossencoder"
   LOGGER_NAME: "crossencoder"
   TRACK_METRIC: P@10
   PATIENCE: 5
-  N_EPOCHS: 2
+  N_EPOCHS: 10
   ACCUM_ITER : null
   EVAL_EVERY_N_EPOCH : 1
-  GPUS: null
+  GPUS: [0]
   FIELDS: [
       'conditions',
       'brief_title',

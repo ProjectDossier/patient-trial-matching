@@ -52,7 +52,9 @@ class BatchProcessing:
                 "rank",
                 "score",
                 "run_id"
-            ]
+            ],
+            converters={"qid": str},
+            sep="\t"
         )
 
         if self.mode != "predict_w_no_labels":
@@ -65,6 +67,7 @@ class BatchProcessing:
                     "docno",
                     "label",
                 ],
+                converters={"qid": str},
                 sep=" "
             )
             data = data.merge(
