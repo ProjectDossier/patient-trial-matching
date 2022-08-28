@@ -30,7 +30,9 @@ class Evaluator:
         self.columns_mappings = {
             'qid': 'query_id',
             'docno': 'doc_id',
-            'label': 'relevance'
+            'label': 'relevance',
+            'bm25_score': 'score',
+            'agg_score': 'score'
         }
 
         qrels = pd.read_csv(
@@ -44,6 +46,32 @@ class Evaluator:
             ],
             sep=" ",
             converters={"qid": str}
+        )
+
+        # TODO: DO BETTER
+        #  e.g. same way as the dataloader
+        import yaml
+        with open("../../config/train_config.yml") as f:
+            config = yaml.load(f, Loader=yaml.FullLoader)["easy"]
+
+        self.bm25 = pd.read_csv(
+            config["PATH_2_RUN"],
+            header=None,
+            names=[
+                "qid",
+                "Q0",
+                "docno",
+                "rank",
+                "bm25_score",
+                "run_id"
+            ],
+            usecols=[
+                "qid",
+                "docno",
+                "bm25_score"
+            ],
+            converters={"qid": str},
+            sep="\t"
         )
 
         qrels_map = qrels.rename(
@@ -76,13 +104,58 @@ class Evaluator:
             {"qid": qids, "docno": docnos, "score": pred_scores[:, 0]}
         )
         df_scores.qid = df_scores.qid.astype(str)
+
         # TODO: interpolate bm25
-        df_scores.sort_values(by=["qid", "score"], ascending=False, inplace=True)
+        df_scores = df_scores.merge(
+            self.bm25,
+            on=["qid", "docno"],
+            how="left"
+        )
+
+        df_scores["agg_score"] = (df_scores.score * .7) + (df_scores.bm25_score * .3)
+
+        df_bm25_scores = df_scores[["qid", "docno", "bm25_score"]].copy()
+        df_agg_socres = df_scores[["qid", "docno", "agg_score"]].copy()
+        df_scores = df_scores[["qid", "docno", "score"]]
 
         df_scores = df_scores.rename(columns=self.columns_mappings)
+        df_bm25_scores = df_bm25_scores.rename(columns=self.columns_mappings)
+        df_agg_socres = df_agg_socres.rename(columns=self.columns_mappings)
+
+        df_scores.sort_values(by=["query_id", "score"], ascending=False, inplace=True)
+        df_bm25_scores.sort_values(by=["query_id", "score"], ascending=False, inplace=True)
+        df_agg_socres.sort_values(by=["query_id", "score"], ascending=False, inplace=True)
+        # TODO: compute score for original and new runs (interplation and not interpolation)
+
+        # TODO write runs
+        if out_f_name == "dev":
+            df_scores.to_csv(
+                "crossen_rrnk.csv",
+                index=False,
+                sep=" ",
+                header=False
+            )
+
+            df_scores.to_csv(
+                f"{self.output_path}/crossen_bm25_rrnk.csv",
+                index=False,
+                sep=" ",
+                header=False
+            )
+
+        eval_summary = []
+
+        eval = self.evaluator_graded.calc_aggregate(df_bm25_scores)
+        eval.update(self.evaluator_non_graded.calc_aggregate(df_bm25_scores))
+        eval_summary += [eval]
 
         eval = self.evaluator_graded.calc_aggregate(df_scores)
         eval.update(self.evaluator_non_graded.calc_aggregate(df_scores))
+        eval_summary += [eval]
+
+        eval = self.evaluator_graded.calc_aggregate(df_agg_socres)
+        eval.update(self.evaluator_non_graded.calc_aggregate(df_agg_socres))
+        eval_summary += [eval]
 
         optimization_metric = eval[ir_measures.parse_measure(self.optimization_metric)]
 
@@ -93,7 +166,7 @@ class Evaluator:
                 writer = csv.writer(f)
                 if not output_file_exists:
                     writer.writerow(self.csv_headers)
-
-                writer.writerow([epoch] + [eval[metric] for metric in self.metrics])
+                for eval in eval_summary:
+                    writer.writerow([epoch] + [eval[metric] for metric in self.metrics])
 
         return eval
