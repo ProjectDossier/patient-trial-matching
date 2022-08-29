@@ -25,3 +25,6 @@ scikit-learn~=0.24.2
 keybert==0.6.0
 gensim==4.2.0
 redis[hiredis]
+pytorch_lightning==1.7.2
+dotmap==1.3.30
+ir-measures==0.3.1

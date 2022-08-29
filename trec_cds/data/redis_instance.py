@@ -142,7 +142,7 @@ class RedisInstance:
 
         data = [data[i: i + n_fields] for i in range(0, len(data), n_fields)]
 
-        assert len([i[0] for i in data if i[0] is None]) == 0, "some id does not exists in db"
+        assert len([i[0] for i in data if all(i is None for j in i)]) == 0, "some id does not exists in db"
 
         result = []
         for values in data:
