@@ -1,0 +1,60 @@
+---
+easy:
+  BATCH_SIZE: 2
+  N_SAMPLES: 4
+  MODEL_NAME: "bert-base-uncased"
+  MODEL_ALIAS: "crossencoder"
+  LOGGER_NAME: "crossencoder"
+  CHECKPOINT: "best-checkpoint-v1.ckpt"
+  GPUS: null
+  MODE: "predict_w_labels"
+  FIELDS: [
+      'conditions',
+      'brief_title',
+      'official_title',
+      'brief_summary',
+      'detailed_description'
+  ]
+  QUERY_REPR: "description"
+  RELEVANT_LABELS: [1, 2]
+  PATH_2_RUN: "../../reports/DoSSIER_1.txt"
+  PATH_2_QRELS: "../../data/raw/qrels_Judgment-of-0-is-non-relevant-1-is-excluded-and-2-is-eligible.txt"
+
+DoSSIER_5_easy:
+  BATCH_SIZE: 256
+  N_SAMPLES: 50
+  MODEL_NAME: "bert-base-uncased"
+  MODEL_ALIAS: "crossencoder"
+  LOGGER_NAME: "crossencoder"
+  CHECKPOINT: "best-checkpoint-v4.ckpt"
+  GPUS: [0]
+  MODE: "pred_w_no_labels"
+  FIELDS: [
+    'conditions',
+    'brief_title',
+    'official_title',
+    'brief_summary',
+    'detailed_description'
+  ]
+  QUERY_REPR: "description"
+  RELEVANT_LABELS: [1, 2]
+  PATH_2_RUN: "../../reports/DoSSIER_2"
+  PATH_2_QRELS: "../../data/raw/qrels_Judgment-of-0-is-non-relevant-1-is-excluded-and-2-is-eligible.txt"
+
+DoSSIER_5_difficult:
+  BATCH_SIZE: 256
+  N_SAMPLES: 50
+  MODEL_NAME: "bert-base-uncased"
+  MODEL_ALIAS: "crossencoder"
+  LOGGER_NAME: "crossencoder"
+  CHECKPOINT: "best-checkpoint-v4.ckpt"
+  GPUS: [ 0 ]
+  MODE: "pred_w_no_labels"
+  FIELDS: [
+    'criteria',
+  ]
+  QUERY_REPR: "description"
+  RELEVANT_LABELS: [ 1, 2 ]
+  PATH_2_RUN: "../../reports/DoSSIER_5_easy"
+  PATH_2_QRELS: "../../data/raw/qrels_Judgment-of-0-is-non-relevant-1-is-excluded-and-2-is-eligible.txt"
+

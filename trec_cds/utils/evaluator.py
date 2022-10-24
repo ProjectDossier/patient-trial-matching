@@ -15,8 +15,9 @@ class Evaluator:
         self,
         optimization_metric=P@10,
         write_csv: bool = True,
+        mode="train",
         output_path: str = "../../reports/",
-        run_id: str = None,
+        run_id: str = "DoSSIER_5_difficult",
     ):
 
         self.optimization_metric = optimization_metric
@@ -26,6 +27,7 @@ class Evaluator:
         non_graded_metrics = [RR, P@10]
         self.metrics = graded_metrics + non_graded_metrics
         self.csv_headers = ["epoch"] + [str(i) for i in self.metrics]
+        self.run_id = run_id
 
         self.columns_mappings = {
             'qid': 'query_id',
@@ -51,8 +53,8 @@ class Evaluator:
         # TODO: DO BETTER
         #  e.g. same way as the dataloader
         import yaml
-        with open("../../config/train_config.yml") as f:
-            config = yaml.load(f, Loader=yaml.FullLoader)["easy"]
+        with open(f"../../config/{mode}/config.yml") as f:
+            config = yaml.load(f, Loader=yaml.FullLoader)[self.run_id]
 
         self.bm25 = pd.read_csv(
             config["PATH_2_RUN"],
@@ -71,7 +73,7 @@ class Evaluator:
                 "bm25_score"
             ],
             converters={"qid": str},
-            sep="\t"
+            sep=" "
         )
 
         qrels_map = qrels.rename(
@@ -105,12 +107,13 @@ class Evaluator:
         )
         df_scores.qid = df_scores.qid.astype(str)
 
-        # TODO: interpolate bm25
         df_scores = df_scores.merge(
             self.bm25,
             on=["qid", "docno"],
             how="left"
         )
+
+        # TODO get rid of redundant code
 
         df_scores["agg_score"] = (df_scores.score * .7) + (df_scores.bm25_score * .3)
 
@@ -125,19 +128,26 @@ class Evaluator:
         df_scores.sort_values(by=["query_id", "score"], ascending=False, inplace=True)
         df_bm25_scores.sort_values(by=["query_id", "score"], ascending=False, inplace=True)
         df_agg_socres.sort_values(by=["query_id", "score"], ascending=False, inplace=True)
-        # TODO: compute score for original and new runs (interplation and not interpolation)
 
-        # TODO write runs
-        if out_f_name == "dev":
-            df_scores.to_csv(
-                "crossen_rrnk.csv",
-                index=False,
-                sep=" ",
-                header=False
-            )
+        df_scores.query_id = df_scores.query_id.astype(str)
+        df_bm25_scores.query_id = df_bm25_scores.query_id.astype(str)
+        df_agg_socres.query_id = df_agg_socres.query_id.astype(str)
 
-            df_scores.to_csv(
-                f"{self.output_path}/crossen_bm25_rrnk.csv",
+        if out_f_name in ["pred"]:
+            df_agg_socres["Q0"] = "Q0"
+            df_agg_socres["run_id"] = self.run_id
+            df_agg_socres["rank"] = list(range(1, 51)) * 50# TODO make it variable
+            df_agg_socres[
+                [
+                    "query_id",
+                    "Q0",
+                    "doc_id",
+                    "rank",
+                    "score",
+                    "run_id"
+                ]
+            ].to_csv(
+                f"{self.output_path}/{self.run_id}",
                 index=False,
                 sep=" ",
                 header=False

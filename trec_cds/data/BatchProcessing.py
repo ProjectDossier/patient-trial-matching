@@ -10,9 +10,10 @@ class BatchProcessing:
         self,
         fields: List[str],
         query_repr: str,
-        relevant_labels: List[int],
         path_to_run: str,
         path_to_qrels: str,
+        relevant_labels: List[int],
+        irrelevant_labels: Optional[List[int]] = None,
         mode: str = "train",
         splits: Dict = {"train": 0.60, "val": 0.10, "test": 0.30},
         r_seed: int = 42,
@@ -31,8 +32,10 @@ class BatchProcessing:
         self.fields = fields
         self.query_repr = query_repr
         self.relevant_labels = relevant_labels
+        self.irrelevant_labels = irrelevant_labels
         self.path_to_run = path_to_run
         self.path_to_qrels = path_to_qrels
+
 
         random.seed(r_seed)
 
@@ -54,7 +57,7 @@ class BatchProcessing:
                 "run_id"
             ],
             converters={"qid": str},
-            sep="\t"
+            sep=" "
         )
 
         if self.mode != "predict_w_no_labels":
@@ -80,6 +83,12 @@ class BatchProcessing:
             )
 
             self.reference_run = data.copy()
+            if self.irrelevant_labels is not None:
+                self.reference_run = self.reference_run[
+                    self.reference_run.label.isin(
+                        self.irrelevant_labels + self.relevant_labels
+                    )
+                ]
 
             data = data.fillna(0)
             if self.mode == "train":
@@ -184,7 +193,7 @@ class BatchProcessing:
         negatives = []
         for qid, docno in positives:
             negative_list = run[
-                                (run.qid == qid) & (run.label == 0)
+                                (run.qid == qid) & (run.label.isin(self.irrelevant_labels))
                                 ].docno.values.tolist()[0:100]
             random.shuffle(negative_list)
             negatives.append([qid, negative_list[0]])

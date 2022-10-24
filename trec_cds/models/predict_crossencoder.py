@@ -5,9 +5,10 @@ from trec_cds.data.ClinicalTrialsDataModule import ClinicalTrialsDataModule
 from pytorch_lightning.loggers import TensorBoardLogger
 import yaml
 
+
 if __name__ == "__main__":
-    with open("../../config/prediction_config.yml") as f:
-        config = yaml.load(f, Loader=yaml.FullLoader)["easy"]  # name of the configuration
+    with open("../../config/predict/config.yml") as f:
+        config = yaml.load(f, Loader=yaml.FullLoader)["DoSSIER_5_difficult"]  # name of the configuration
         config = DotMap(config)
 
     data_module = ClinicalTrialsDataModule(
@@ -25,7 +26,8 @@ if __name__ == "__main__":
     model = CrossEncoder.load_from_checkpoint(
         checkpoint_path=f"../../models/{config.MODEL_ALIAS}/checkpoints/{config.CHECKPOINT}",
         model_name=config.MODEL_NAME,
-        num_labels=2
+        num_labels=2,
+        mode="predict"
     )
 
     logger = TensorBoardLogger(

@@ -18,6 +18,7 @@ class CrossEncoder(pl.LightningModule, ABC):
         n_warmup_steps: int = None,
         batch_size: int = 16,
         optimization_metric: str = P@10,
+        mode: str = "train"
     ):
         super().__init__()
         self.n_training_steps = n_training_steps
@@ -54,6 +55,7 @@ class CrossEncoder(pl.LightningModule, ABC):
 
         self.evaluator = Evaluator(
             optimization_metric=ir_measures.parse_measure(optimization_metric),
+            mode=mode
         )
 
     def forward(
@@ -134,8 +136,9 @@ class CrossEncoder(pl.LightningModule, ABC):
             out_f_name=name
         )
 
-        for metric, value in eval.items():
-            self.log(str(metric), value, prog_bar=True, logger=True)
+        if name != "pred":
+            for metric, value in eval.items():
+                self.log(str(metric), value, prog_bar=True, logger=True)
 
     def validation_step(self, batch, batch_idx):
         return self.eval_batch(batch)
