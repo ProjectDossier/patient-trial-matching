@@ -114,14 +114,6 @@ Insulin Dependant Diabetic
 Fungal Esophagitis Stage IV?
 Urinary Tract Infections-pseudomonas &amp; enterococcus
 </topic>
-    dataclass:
-        Age:
-        Gender:
-        past dieseaes: [ ... ]
-        present diseases: [ ... ]
-        ...
-        other:
-
 <topic number="14">
 70 y/o with COPD on 2.5-3.5L O2 at baseline, OSA and obesity hypoventilation syndrome, dCHF, discharged [**2132-8-24**] now presents with agitation and altered mental status with hypoxia and O2 sats 70s on BipAp with 5L. Pt agitated then somnolent at initial presentation. Daughter reported increased agitation and altered mental status x 2-3 days with O2 sats 60s-70s at home. Daughter has also noted increased LE edema and weight gain which prompted a phone call to her PCP and increased lasix dose from 80daily to 100mg daily with some mild improvement in edema. She has had decreased appetite, PO intake, energy level at home with difficulty with ADLs. No recent history of fever, cough, chills, sputum production, CP, abd pain, or other complaints other than chronic right thigh pain last 1-2 months. Daughter also reports med compliance and compliance with BiPap at night.
 Past Medical History:
