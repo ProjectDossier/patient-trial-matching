@@ -9,18 +9,24 @@ import pandas as pd
 class RedisInstance:
     def __init__(
             self,
-            id: Union[str, int] = 0,
+            id: Union[str, int] = 1,
             path_to_collection: Optional[str] = None,
-            path_to_topics: Optional[str] = None
+            path_to_topics: Optional[str] = None,
+            version: Optional[str] = "2021"
     ):
 
         self.redis_db = StrictRedis(
-            host="localhost",
+            host="149.132.176.45",
             port=6379,
             db=id,
             charset="utf-8",
-            decode_responses=True
+            decode_responses=True,
+            password="academic-coll",
+            socket_keepalive=True,
+            socket_timeout=259200,
+            socket_connect_timeout=259200,
         )
+
         self.str_fields = [
             'org_study_id',
             'brief_title',
@@ -55,14 +61,14 @@ class RedisInstance:
 
         try:
             self.get_docs(["NCT00000107"])
-            self.get_topics([1])
+            self.get_topics([1], version)
         except AssertionError:
             if path_to_collection is not None:
                 self.load_docs(path_to_collection)
             else:
                 print("Warning: empty collection")
             if path_to_topics is not None:
-                self.load_topics(path_to_topics)
+                self.load_topics(path_to_topics, version)
             else:
                 print("Warning: empty topics")
 
@@ -76,6 +82,7 @@ class RedisInstance:
         fields = []
         with open(path) as f:
             for line in tqdm(f):
+
                 doc = json.loads(line)
                 docno = doc["nct_id"]
 
@@ -172,10 +179,18 @@ class RedisInstance:
 
     def load_topics(
             self,
-            path: str
+            path: str,
+            version: str,
+            fields: List[str] = [
+                "qid",
+                "query",
+                "keywords",
+                "description",
+                "gender",
+                "age"
+            ]
     ):
         topics = pd.read_csv(path)
-        fields = list(topics.columns)
 
         for idx, topic in tqdm(topics.iterrows()):
             qid = topic["qid"]
@@ -183,10 +198,9 @@ class RedisInstance:
             insert = {}
 
             for field in fields:
-
                 insert.update(
                     {
-                        f"topic:{qid}:{field}": str(topic[field])
+                        f"topic:{version}{qid}:{field}": str(topic[field])
                     }
                 )
 
@@ -195,9 +209,11 @@ class RedisInstance:
     def get_topics(
             self,
             qids: List[int],
+            version: str,
             fields: List[str] = [
                 "qid",
                 "query",
+                "description",
                 "keywords",
                 "gender",
                 "age"
@@ -207,7 +223,7 @@ class RedisInstance:
         n_fields = len(fields)
 
         keys = [
-            f"topic:{qid}:{field}"
+            f"topic:{version}{qid}:{field}"
             for qid in qids
             for field in fields
         ]
@@ -228,7 +244,7 @@ class RedisInstance:
             result.append(item)
         return result
 
-    def filter_run(self, qid: List[int], docno:List[int]):
+    def filter_run(self, qid: List[int], docno: List[int]):
         patient = self.get_topics(
             qids=[qid],
             fields=["age", "gender"]
@@ -247,15 +263,27 @@ class RedisInstance:
         trial["maximum_age"] = 100 if trial["maximum_age"] is None else trial["maximum_age"]
 
         result = (
-            (
-                patient["gender"] == trial["gender"]
-                or
-                trial["gender"] not in ["F", "M"]
-            )
-            and
-            patient["age"] >= trial["minimum_age"]
-            and
-            patient["age"] <= trial["maximum_age"]
+                (
+                        patient["gender"] == trial["gender"]
+                        or
+                        trial["gender"] not in ["F", "M"]
+                )
+                and
+                trial["minimum_age"] <= patient["age"] <= trial["maximum_age"]
         )
 
         return result
+
+
+if __name__ == "__main__":
+
+    version = "2022"
+    path_to_topics = f"../../data/interim/topics{version}.2.csv"
+
+    db_instance = RedisInstance(
+        path_to_topics=path_to_topics,
+        version=version
+    )
+
+    db_instance.load_topics(path_to_topics, version)
+    print()

@@ -21,6 +21,7 @@ class BatchProcessing:
         train_batch_size: int = 16,
         n_val_samples: Optional[int] = None,
         n_test_samples: Optional[int] = None,
+        dataset_version: Optional[str] = "2021",
     ):
 
         self.train_batch_size = train_batch_size
@@ -35,6 +36,7 @@ class BatchProcessing:
         self.irrelevant_labels = irrelevant_labels
         self.path_to_run = path_to_run
         self.path_to_qrels = path_to_qrels
+        self.dataset_version=dataset_version
 
 
         random.seed(r_seed)
@@ -143,8 +145,9 @@ class BatchProcessing:
         qids = [i[0] for i in sample_ids]
         unique_qids = list(set(qids))
         topics = self.db.get_topics(
-            unique_qids,
-            [self.query_repr]
+            qids=unique_qids,
+            version=self.dataset_version,
+            fields=[self.query_repr]
         )
 
         topics_dict = {}
