@@ -1,6 +1,7 @@
 import argparse
 import json
 import logging
+from collections import defaultdict
 from typing import Dict, List
 
 import numpy as np
@@ -32,6 +33,8 @@ def reranking(
     :param topics: list of Patient objects
     :return:
     """
+    count_dict = defaultdict(int)
+
     with open(result_filename) as fp:
         results = json.load(fp)
 
@@ -59,16 +62,23 @@ def reranking(
                 checked += 1
 
                 if len(clinical_trial.inclusion) == 0:
+                    count_dict['empty_inclusion'] += 1
                     # if no inclusion criteria we take whole trial text
                     inclusions_encoded = model.encode([clinical_trial.text()])
                 else:
                     inclusions_encoded = model.encode(clinical_trial.inclusion)
 
                 if len(clinical_trial.exclusion) == 0:
+                    count_dict['empty_exclusion'] += 1
                     # if no exclusion criteria we assume a vector with zeros
                     exclusions_encoded = np.zeros(topic_encoded.shape)
                 else:
                     exclusions_encoded = model.encode(clinical_trial.exclusion)
+
+                if len(clinical_trial.inclusion) == 0 and len(clinical_trial.exclusion) == 0:
+                    count_dict['empty_both'] += 1
+                else:
+                    count_dict['all_good'] += 1
 
                 topic_inclusion_similarities = cosine_similarity(
                     topic_encoded, inclusions_encoded
@@ -83,7 +93,7 @@ def reranking(
                     np.sort(topic_inclusion_similarities)[-3:]
                 ) * (1 - np.mean(np.sort(topic_exclusion_similarities)[-3:]))
 
-                if np.mean(np.sort(topic_exclusion_similarities)[-2:]) > 0.8:
+                if np.mean(np.sort(topic_exclusion_similarities)[-2:]) > 0.9:
                     print(
                         f"discarding {nct_id} for topic {topic_no}. \
                         {np.mean(np.sort(topic_exclusion_similarities)[-2:])}"
@@ -105,6 +115,9 @@ def reranking(
         f"{total_checked=} - {total_excluded=} - \
          percentage of excluded {total_excluded / total_checked}%"
     )
+    print(count_dict)
+    with open(output_file, "w") as fp:
+        json.dump(output_scores, fp)
 
     with open(output_file, "w") as fp:
         json.dump(output_scores, fp)
@@ -148,7 +161,7 @@ if __name__ == "__main__":
     topics = load_patients_from_xml(patient_file=args.topic_file)
 
     cts = parse_clinical_trials_from_folder(
-        folder_name=args.clinical_trials_folder, first_n=args.first_n
+        folder_name=args.clinical_trials_folder, first_n=None
     )
     cts_dict = {ct.nct_id: ct for ct in cts}
 

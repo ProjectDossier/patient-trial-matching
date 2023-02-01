@@ -11,11 +11,11 @@ from tqdm import tqdm
 
 from CTnlp.clinical_trial import ClinicalTrial
 from CTnlp.parsers import parse_clinical_trials_from_folder
-from CTnlp.patient.parser import load_patients_from_xml
-from CTnlp.patient.patient import Patient
+from CTnlp.patient import load_patients_from_xml
+from CTnlp.patient import Patient
 from trec_cds.features.build_features import ClinicalTrialsFeatures
-from trec_cds.models.evaluation import load_qrels, print_line, read_bm25
-
+from trec_cds.models.trec_evaluation import load_qrels, print_line, read_bm25
+from trec_cds.features.index_clinical_trials import Indexer
 
 def eval(run, qrels_path):
     qrels = load_qrels(qrels_path)
@@ -40,24 +40,24 @@ def eval(run, qrels_path):
         )
 
 
-class Indexer:
-    """Wrapper around BM25Okapi class that indexes ClinicalTrials and allows for
-    querying them with Topic data. input data must be preprocessed and tokenized."""
-
-    index: BM25Plus
-
-    def index_clinical_trials(self, text):
-        self.index = BM25Plus(text)
-
-    def query_single(self, query: List[str], return_top_n: int) -> Dict[str, float]:
-        topic_scores = {}
-        doc_scores = self.index.get_scores(query)
-        for index, score in zip(
-            np.argsort(doc_scores)[-return_top_n:], np.sort(doc_scores)[-return_top_n:]
-        ):
-            topic_scores[cts[index].nct_id] = score
-
-        return topic_scores
+# class Indexer:
+#     """Wrapper around BM25Okapi class that indexes ClinicalTrials and allows for
+#     querying them with Topic data. input data must be preprocessed and tokenized."""
+#
+#     index: BM25Plus
+#
+#     def index_clinical_trials(self, text):
+#         self.index = BM25Plus(text)
+#
+#     def query_single(self, query: List[str], return_top_n: int) -> Dict[str, float]:
+#         topic_scores = {}
+#         doc_scores = self.index.get_scores(query)
+#         for index, score in zip(
+#             np.argsort(doc_scores)[-return_top_n:], np.sort(doc_scores)[-return_top_n:]
+#         ):
+#             topic_scores[cts[index].nct_id] = score
+#
+#         return topic_scores
 
 
 if __name__ == "__main__":
@@ -112,16 +112,18 @@ if __name__ == "__main__":
 
     topics: List[Patient] = load_patients_from_xml(patient_file=args.topic_file)
 
+    print("lowercase, no punctuation, no stopwords, no keywords")
+
     options = [
-        # "summary",
-        # "eligibility",
-        # "inclusion",
-        # "exclusion",
-        # "description",
-        # "description_criteria",
-        # "description_criteria_title",
-        # "summary_criteria",
-        # "summary_criteria_title",
+        "summary",
+        "eligibility",
+        "inclusion",
+        "exclusion",
+        "description",
+        "description_criteria",
+        "description_criteria_title",
+        "summary_criteria",
+        "summary_criteria_title",
         "summary_description_titles",
         "summary_description_titles_conditions",
         "summary_description_titles_conditions_inclusion",
@@ -135,7 +137,7 @@ if __name__ == "__main__":
     for option in tqdm(options):
         print(option)
         cts_tokenized = []
-        for _clinical_trial in tqdm(cts):
+        for _clinical_trial in cts:
             if option == "summary":
                 cts_tokenized.append(feature_builder.preprocess_text(_clinical_trial.brief_summary))
             elif option == "brief_title":
@@ -179,12 +181,19 @@ if __name__ == "__main__":
             else:
                 continue
 
+        cts_tokenized = [ct if len(ct) > 0 else ["empty"] for ct in cts_tokenized]
+
+        for ct_index in range(len(cts_tokenized)):
+            cts_tokenized[ct_index] = [x.lower() for x in cts_tokenized[ct_index] if x.strip()]
+
+        lookup_table = {x_index: x.nct_id for x_index, x in enumerate(cts)}
         indexer = Indexer()
-        indexer.index_clinical_trials(text=cts_tokenized)
+        indexer.index_text(text=cts_tokenized, lookup_table=lookup_table)
 
         output_scores = {}
         for topic in topics:
             doc = feature_builder.preprocess_text(topic.description)
+            doc = [x.lower() for x in doc if x.strip()]
             output_scores[topic.patient_id] = indexer.query_single(
                 query=doc, return_top_n=args.return_top_n
             )
@@ -220,3 +229,6 @@ if __name__ == "__main__":
 
         eval(run=read_bm25(f"{args.submission_folder}/bm25p-{option}-220824"),
              qrels_path="/home/wkusa/projects/trec-cds/data/external/qrels2021.txt")
+
+        eval(run=read_bm25(f"{args.submission_folder}/bm25p-{option}-220824"),
+             qrels_path="/home/wkusa/projects/TREC/trec-cds/data/external/qrels2021_binary.txt")
