@@ -1,54 +1,16 @@
 import argparse
 import json
 import logging
-import pickle
-from typing import List, Dict
+from typing import List
 
-import numpy as np
-import pytrec_eval
-from rank_bm25 import BM25Okapi, BM25Plus
 from tqdm import tqdm
 
-from CTnlp.clinical_trial import ClinicalTrial
 from CTnlp.parsers import parse_clinical_trials_from_folder
-from CTnlp.patient import load_patients_from_xml
 from CTnlp.patient import Patient
+from CTnlp.patient import load_patients_from_xml
 from trec_cds.features.build_features import ClinicalTrialsFeatures
-from trec_cds.models.trec_evaluation import load_qrels, print_line, read_bm25, write_line
 from trec_cds.features.index_clinical_trials import Indexer
-
-
-def eval(run, qrels_path, eval_measures= {"ndcg_cut_10", "P_10", "recip_rank", "ndcg_cut_5"}):
-    qrels = load_qrels(qrels_path)
-    evaluator = pytrec_eval.RelevanceEvaluator(
-        qrels, eval_measures
-    )
-    results = evaluator.evaluate(run)
-
-    for query_id, query_measures in sorted(results.items()):
-        for measure, value in sorted(query_measures.items()):
-            pass
-            # print_line(measure, query_id, value)
-    output_string = ""
-    for measure in sorted(query_measures.keys()):
-        print_line(
-            measure,
-            "all",
-            pytrec_eval.compute_aggregated_measure(
-                measure,
-                [query_measures[measure] for query_measures in results.values()],
-            ),
-        )
-        output_string += write_line(measure,
-            "all",
-            pytrec_eval.compute_aggregated_measure(
-                measure,
-                [query_measures[measure] for query_measures in results.values()],
-            ),)
-
-    return output_string
-
-
+from trec_cds.models.trec_evaluation import read_bm25, evaluate
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -96,36 +58,61 @@ if __name__ == "__main__":
         folder_name=args.clinical_trials_folder, first_n=None
     )
 
-    feature_builder = ClinicalTrialsFeatures(spacy_language_model_name='en_core_sci_lg')
+    feature_builder = ClinicalTrialsFeatures(spacy_language_model_name="en_core_sci_lg")
     for clinical_trial in tqdm(cts):
-       feature_builder.preprocess_clinical_trial(clinical_trial=clinical_trial)
+        feature_builder.preprocess_clinical_trial(clinical_trial=clinical_trial)
 
     topics: List[Patient] = load_patients_from_xml(patient_file=args.topic_file)
 
     print("lowercase, no punctuation, no stopwords, no keywords")
 
     options = {
-        "brief_title" : [x.brief_title for x in cts],
-        "official_title" : [x.official_title for x in cts],
-        "conditions" : [" ".join(x.conditions) for x in cts],
-        "titles" : [f"{x.brief_title} {x.official_title}" for x in cts],
-        "inclusion" : [" ".join(x.inclusion) for x in cts],
-        "exclusion" : [" ".join(x.exclusion) for x in cts],
-        "eligibility" : [x.criteria for x in cts],
-        "summary" : [x.brief_summary for x in cts],
-        "description" : [x.detailed_description for x in cts],
-        "description_criteria" : [f"{x.detailed_description} {x.criteria}" for x in cts],
-        "description_criteria_title" : [f"{x.detailed_description} {x.criteria} {x.brief_title}" for x in cts],
-        "description_criteria_titles" : [f"{x.detailed_description} {x.criteria} {x.brief_title} {x.official_title}" for x in cts],
-        "summary_criteria" : [f"{x.brief_summary} {x.criteria}" for x in cts],
-        "summary_criteria_title" : [f"{x.brief_summary} {x.criteria} {x.brief_title}" for x in cts],
-        "summary_criteria_titles" : [f"{x.brief_summary} {x.criteria} {x.brief_title} {x.official_title}" for x in cts],
-        "summary_description_titles" : [f"{x.brief_summary} {x.official_title} {x.brief_title} {x.detailed_description}" for x in cts],
-        "summary_description_titles_conditions" : [f"{x.brief_summary} {x.official_title} {x.brief_title} {x.detailed_description} {' '.join(x.conditions)}" for x in cts],
-        "summary_description_titles_conditions_inclusion" : [f"{x.brief_summary} {x.official_title} {x.brief_title} {x.detailed_description} {' '.join(x.conditions)} {' '.join(x.inclusion)}" for x in cts],
-        "summary_description_titles_conditions_exclusion" : [f"{x.brief_summary} {x.official_title} {x.brief_title} {x.detailed_description} {' '.join(x.conditions)} {' '.join(x.exclusion)}" for x in cts],
-        "summary_description_titles_conditions_eligibility" : [f"{x.brief_summary} {x.official_title} {x.brief_title} {x.detailed_description} {' '.join(x.conditions)}  {x.criteria}" for x in cts],
-        "all" : [x.text_preprocessed for x in cts],
+        "brief_title": [x.brief_title for x in cts],
+        "official_title": [x.official_title for x in cts],
+        "conditions": [" ".join(x.conditions) for x in cts],
+        "titles": [f"{x.brief_title} {x.official_title}" for x in cts],
+        "inclusion": [" ".join(x.inclusion) for x in cts],
+        "exclusion": [" ".join(x.exclusion) for x in cts],
+        "eligibility": [x.criteria for x in cts],
+        "summary": [x.brief_summary for x in cts],
+        "description": [x.detailed_description for x in cts],
+        "description_criteria": [f"{x.detailed_description} {x.criteria}" for x in cts],
+        "description_criteria_title": [
+            f"{x.detailed_description} {x.criteria} {x.brief_title}" for x in cts
+        ],
+        "description_criteria_titles": [
+            f"{x.detailed_description} {x.criteria} {x.brief_title} {x.official_title}"
+            for x in cts
+        ],
+        "summary_criteria": [f"{x.brief_summary} {x.criteria}" for x in cts],
+        "summary_criteria_title": [
+            f"{x.brief_summary} {x.criteria} {x.brief_title}" for x in cts
+        ],
+        "summary_criteria_titles": [
+            f"{x.brief_summary} {x.criteria} {x.brief_title} {x.official_title}"
+            for x in cts
+        ],
+        "summary_description_titles": [
+            f"{x.brief_summary} {x.official_title} {x.brief_title} {x.detailed_description}"
+            for x in cts
+        ],
+        "summary_description_titles_conditions": [
+            f"{x.brief_summary} {x.official_title} {x.brief_title} {x.detailed_description} {' '.join(x.conditions)}"
+            for x in cts
+        ],
+        "summary_description_titles_conditions_inclusion": [
+            f"{x.brief_summary} {x.official_title} {x.brief_title} {x.detailed_description} {' '.join(x.conditions)} {' '.join(x.inclusion)}"
+            for x in cts
+        ],
+        "summary_description_titles_conditions_exclusion": [
+            f"{x.brief_summary} {x.official_title} {x.brief_title} {x.detailed_description} {' '.join(x.conditions)} {' '.join(x.exclusion)}"
+            for x in cts
+        ],
+        "summary_description_titles_conditions_eligibility": [
+            f"{x.brief_summary} {x.official_title} {x.brief_title} {x.detailed_description} {' '.join(x.conditions)}  {x.criteria}"
+            for x in cts
+        ],
+        "all": [x.text_preprocessed for x in cts],
     }
 
     for option, cts_list in options.items():
@@ -134,13 +121,20 @@ if __name__ == "__main__":
 
         for _clinical_trial in tqdm(cts_list):
             cts_tokenized.append(
-                feature_builder.preprocess_text(_clinical_trial, no_stopwords=True, no_punctuation=True,
-                                                lemmatised=False))
+                feature_builder.preprocess_text(
+                    _clinical_trial,
+                    no_stopwords=True,
+                    no_punctuation=True,
+                    lemmatised=False,
+                )
+            )
 
         cts_tokenized = [ct if len(ct) > 0 else ["empty"] for ct in cts_tokenized]
 
         for ct_index in range(len(cts_tokenized)):
-            cts_tokenized[ct_index] = [x.lower() for x in cts_tokenized[ct_index] if x.strip()]
+            cts_tokenized[ct_index] = [
+                x.lower() for x in cts_tokenized[ct_index] if x.strip()
+            ]
 
         lookup_table = {x_index: x.nct_id for x_index, x in enumerate(cts)}
         indexer = Indexer()
@@ -167,7 +161,9 @@ if __name__ == "__main__":
                 sorted_results = {
                     k: v
                     for k, v in sorted(
-                        results[topic_no].items(), key=lambda item: item[1], reverse=True
+                        results[topic_no].items(),
+                        key=lambda item: item[1],
+                        reverse=True,
                     )
                 }
 
@@ -183,13 +179,17 @@ if __name__ == "__main__":
                     line = f"{topic_no} Q0 {doc} {rank + 1} {score} {option}\n"
                     fp.write(line)
 
-        output_results = eval(run=read_bm25(f"{args.submission_folder}/bm25p-{option}-221020"),
-             qrels_path="/home/wkusa/projects/trec-cds/data/external/qrels2021.txt",
-                              eval_measures= {"ndcg_cut_10", "P_10", "recip_rank", "ndcg_cut_5"})
+        output_results = evaluate(
+            run=read_bm25(f"{args.submission_folder}/bm25p-{option}-221020"),
+            qrels_path="/home/wkusa/projects/trec-cds/data/external/qrels2021.txt",
+            eval_measures={"ndcg_cut_10", "P_10", "recip_rank", "ndcg_cut_5"},
+        )
 
-        output_results += eval(run=read_bm25(f"{args.submission_folder}/bm25p-{option}-221020"),
-             qrels_path="/home/wkusa/projects/TREC/trec-cds/data/external/qrels2021_binary.txt",
-                               eval_measures= {"P_10", "recip_rank"})
+        output_results += evaluate(
+            run=read_bm25(f"{args.submission_folder}/bm25p-{option}-221020"),
+            qrels_path="/home/wkusa/projects/TREC/trec-cds/data/external/qrels2021_binary.txt",
+            eval_measures={"P_10", "recip_rank"},
+        )
 
-        with open(f"{args.submission_folder}/bm25p-{option}-221020-results", 'w') as fp:
+        with open(f"{args.submission_folder}/bm25p-{option}-221020-results", "w") as fp:
             fp.write(output_results)

@@ -1,22 +1,47 @@
 import json
 import logging
-from typing import Dict, List
+from typing import Dict
+from typing import List
 
-import pandas as pd
+from trec_cds.data.load_data_from_file import load_jsonl
 
-from CTnlp.clinical_trial import ClinicalTrial
-from CTnlp.parsers import parse_clinical_trials_from_folder
-from CTnlp.patient.parser import load_patients_from_xml
-from CTnlp.patient.patient import Patient
-from CTnlp.utils import Gender
-from trec_cds.features.entity_recognition import EntityRecognition
+
+def add_filter_for_x(ct, x: List[str]):
+    accepts_x = None
+    inclusion_occurence = 0
+    exclusion_occurence = 0
+    for keyword in x:
+        if keyword in ct["inclusion_criteria"]["positive_entities"]:
+            inclusion_occurence += 1
+        if keyword in ct["inclusion_criteria"]["negated_entities"]:
+            inclusion_occurence -= 1
+    for keyword in x:
+        if keyword in ct["exclusion_criteria"]["positive_entities"]:
+            exclusion_occurence -= 1
+        if keyword in ct["exclusion_criteria"]["negated_entities"]:
+            exclusion_occurence += 1
+
+    if inclusion_occurence + exclusion_occurence > 0:
+        accepts_x = True
+    elif inclusion_occurence + exclusion_occurence < 0:
+        accepts_x = False
+    else:
+        accepts_x = "No info"
+    return accepts_x
+
+
+def create_new_filters(cts):
+    for ct in cts:
+        ct["accepts_smokers"] = add_filter_for_x(ct, x=["smoking", "smoke"])
+        ct["accepts_drinkers"] = add_filter_for_x(ct, x=["alcohol"])
+    return cts
 
 
 def postprocessing(
     result_filename: str,
     output_file: str,
-    clinical_trials_dict: Dict[str, ClinicalTrial],
-    topics: List[Patient],
+    clinical_trials_dict: Dict[str, Dict[str, str]],
+    patients: List[Dict[str, str]],
 ):
     """Post processes result file by removing gender, age and health status mismatches
     between topic and clinical trial data."""
@@ -34,16 +59,20 @@ def postprocessing(
         checked = 0
 
         for nct_id, score in results[topic_no].items():
-            healthy = topics[int(topic_no) - 1].is_healthy
-            gender = topics[int(topic_no) - 1].gender
-            age = topics[int(topic_no) - 1].age
+            healthy = patients[int(topic_no) - 1]["is_healthy"]
+            gender = patients[int(topic_no) - 1]["gender"]
+            age = patients[int(topic_no) - 1]["age"]
+            is_smoker = patients[int(topic_no) - 1]["is_smoker"]
+            is_drinker = patients[int(topic_no) - 1]["is_drinker"]
 
             clinical_trial = clinical_trials_dict.get(nct_id, {})
             if clinical_trial:
                 checked += 1
-                if clinical_trial.gender != gender and clinical_trial.gender not in [
-                    Gender.all,
-                    Gender.unknown,
+                if clinical_trial["gender"] != gender and clinical_trial[
+                    "gender"
+                ] not in [
+                    "A",
+                    "U",
                 ]:
                     logging.info("gender mismatch")
                     excluded_num += 1
@@ -51,22 +80,36 @@ def postprocessing(
 
                 if (
                     age != -1
-                    and clinical_trial.minimum_age
-                    and age < clinical_trial.minimum_age
+                    and clinical_trial["minimum_age"]
+                    and age < clinical_trial["minimum_age"]
                 ):
                     logging.info("skipping because of minimum_age age")
                     excluded_num += 1
                     continue
                 if (
                     age != -1
-                    and clinical_trial.maximum_age
-                    and age > clinical_trial.maximum_age
+                    and clinical_trial["maximum_age"]
+                    and age > clinical_trial["maximum_age"]
                 ):
                     logging.info("skipping because of maximum_age age")
                     excluded_num += 1
                     continue
 
-                if healthy and not clinical_trial.accepts_healthy_volunteers:
+                if is_smoker and not clinical_trial["accepts_smokers"]:
+                    logging.info(
+                        "skipping because of smoker and trial does not accept smokers"
+                    )
+                    excluded_num += 1
+                    continue
+
+                if is_drinker and not clinical_trial["accepts_drinkers"]:
+                    logging.info(
+                        "skipping because of drinker and trial does not accept drinkers"
+                    )
+                    excluded_num += 1
+                    continue
+
+                if healthy and not clinical_trial["accepts_healthy_volunteers"]:
                     logging.info("trial not accepting healthy volunteers")
                     excluded_num += 1
                     continue
@@ -88,33 +131,32 @@ def postprocessing(
 
 
 if __name__ == "__main__":
-    topic_file = "data/external/topics2021.xml"
-    clinical_trials_folder = "data/external/ClinicalTrials"
-    first_stage_results_file = "data/processed/bm25-baseline-scores-4000.json"
+    # lemma = 'lemma'
+    lemma = "not_lemma"
 
-    topics = load_patients_from_xml(patient_file=topic_file)
-    er = EntityRecognition()
-    er.predict(topics=topics)
+    submission_folder = "/newstorage4/wkusa/data/trec_cds/data/submissions/"
 
-    health_status_df = pd.read_csv("data/raw/topics-healthiness.csv")
-    for topic in topics:
-        label = health_status_df[topic.patient_id == health_status_df["index"]][
-            "label"
-        ].tolist()[0]
-        if label == "HEALTHY":
-            topic.healthy = True
-        else:
-            topic.healthy = False
+    trials_file = "/newstorage4/wkusa/data/trec_cds/trials_parsed-new.jsonl"
+    trials = load_jsonl(trials_file)
+    trials = create_new_filters(trials)
 
-    cts = parse_clinical_trials_from_folder(
-        folder_name=clinical_trials_folder, first_n=400000
-    )
+    cts_dict = {ct["nct_id"]: ct for ct in trials}
 
-    cts_dict = {ct.nct_id: ct for ct in cts}
+    # "bm25p-submission_topics2021_not_lemma_pnfp_eligibility_all-text_cmh-keywords-2022-08-28"
+    output_file = ""
+    for patient_file in ["topics2022"]:
+        # first_stage_results_file = f"{submission_folder}/bm25p-submission_{patient_file}_{lemma}-2022-08-28 12:05:34.101636.json"
+        first_stage_results_file = f"{submission_folder}/bm25p-submission_{patient_file}_{lemma}_pnf_eligibility_all-text_cmh-keywords-2022-08-28.json"
+        run_name = f"submission_{patient_file}_{lemma}"
 
-    postprocessing(
-        result_filename=first_stage_results_file,
-        output_file="data/processed/bm25-baseline-postprocessed.json",
-        clinical_trials_dict=cts_dict,
-        topics=topics,
-    )
+        infile = (
+            f"/home/wkusa/projects/TREC/trec-cds1/data/processed/{patient_file}.jsonl"
+        )
+        patients = load_jsonl(infile)
+
+        postprocessing(
+            result_filename=first_stage_results_file,
+            output_file=f"{submission_folder}/bm25p-postprocessed-{patient_file}-{lemma}_pnf_eligibility_all-text_all-keywords.json",
+            clinical_trials_dict=cts_dict,
+            patients=patients,
+        )

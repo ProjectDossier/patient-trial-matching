@@ -6,7 +6,7 @@ from typing import Union
 logging.basicConfig(level=logging.INFO)
 
 
-def convert_to_trac_submission(
+def convert_to_trec_submission(
     result_filename: str,
     run_name: str,
     output_folder: str,
@@ -66,7 +66,7 @@ def convert_to_trac_submission(
 
 
 if __name__ == "__main__":
-    convert_to_trac_submission(
+    convert_to_trec_submission(
         result_filename="/newstorage4/wkusa/data/trec_cds/data/submissions/bm25p-postprocessed-topics2022-not_lemma_pnf_eligibility_all-text_all-keywords.json",
         run_name="BM25pe-f-pnf-akc-2022",
         output_folder="data/processed/submissions/2022/",

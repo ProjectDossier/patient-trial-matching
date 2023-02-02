@@ -57,7 +57,7 @@ class BatchProcessing:
                 "run_id"
             ],
             converters={"qid": str},
-            sep=" "
+            sep="\t"  # fixme: there was ' ' in some cases?
         )
 
         if self.mode != "predict_w_no_labels":
