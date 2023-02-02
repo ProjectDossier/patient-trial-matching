@@ -127,7 +127,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--clinical_trials_folder",
-        default="data/external/ClinicalTrials",
+        default="/newstorage4/wkusa/data/trec_cds/ClinicalTrials",
         type=str,
         help="path to a folder with clinical trials",
     )
@@ -139,19 +139,19 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--first_stage_file",
-        default="data/processed/bm25-baseline-postprocessed.json",
+        default="/newstorage4/wkusa/data/trec_cds/data/processed/bm25-baseline-postprocessed.json",
         type=str,
         help="path to a outfile where indexed model will be saved.",
     )
     parser.add_argument(
         "--output_file",
-        default="data/processed/bm25-baseline-postprocessed-reranked.json",
+        default="/newstorage4/wkusa/data/trec_cds/data/processed/bm25-baseline-postprocessed-reranked-MiniLM.json",
         type=str,
         help="path to a outfile where indexed model will be saved.",
     )
     parser.add_argument(
         "--first_n",
-        default=2500,
+        default=10000,
         type=int,
         help="load only first n clinical trial documents (max is ~370k)",
     )

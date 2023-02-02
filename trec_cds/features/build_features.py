@@ -41,7 +41,6 @@ class ClinicalTrialsFeatures:
                 "tagger",
                 "parser",
                 "attribute_ruler",
-                "lemmatizer",
             ],
         )
         logging.info("loaded spacy language model for preprocessing Clinical Trials")

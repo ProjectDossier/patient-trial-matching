@@ -67,8 +67,8 @@ def convert_to_trac_submission(
 
 if __name__ == "__main__":
     convert_to_trac_submission(
-        result_filename="data/processed/bm25-baseline-postprocessed-reranked-4000.json",
-        run_name="rerank4000",
-        output_folder="data/processed/submissions/",
-        trim_scores_less_than=0.20,
+        result_filename="/newstorage4/wkusa/data/trec_cds/data/submissions/bm25p-postprocessed-topics2022-not_lemma_pnf_eligibility_all-text_all-keywords.json",
+        run_name="BM25pe-f-pnf-akc-2022",
+        output_folder="data/processed/submissions/2022/",
+        trim_scores_less_than=0.10,
     )

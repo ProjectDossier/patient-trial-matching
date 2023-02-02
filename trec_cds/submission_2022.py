@@ -56,7 +56,9 @@ def get_sections(dict_item, options):
 
 def build_query(patient, options):
     sections = get_sections(patient, options=options)
-    input_text = f"{patient['current_medical_history']} {patient['conditions']} {patient['keywords']}"
+    # input_text = f"{patient['current_medical_history']} {patient['conditions']} {patient['keywords']}"
+    # input_text = f"{patient['description']} {patient['conditions']} {patient['cmh_keywords']}"
+    input_text = f"{patient['description']} {patient['conditions']} {patient['keywords']}"
     text = feature_builder.preprocess_text(input_text, lemmatised=False)
     text.extend(sections)
     return text
@@ -82,7 +84,7 @@ def build_index_input(clinical_trial, options):
     return text
 
 if __name__ == '__main__':
-    options = ['positive', 'negative', 'fh', 'pmh']
+    options = ['positive', 'negative', 'fh']  # 'pmh'
     print(options)
     # lemma = 'lemma'
     lemma = 'not_lemma'
@@ -94,9 +96,9 @@ if __name__ == '__main__':
 
     lookup_table = {x_index: x['nct_id'] for x_index, x in enumerate(trials)}
 
-    index_file = f"/newstorage4/wkusa/data/trec_cds/index_2022_all_{lemma}.p"
+    index_sufix = f"{lemma}_pnf_eligibility_all-text_cmh-keywords"
+    index_file = f"/newstorage4/wkusa/data/trec_cds/index_2022_all_{index_sufix}.p"
     indexer = Indexer()
-
 
     if os.path.isfile(index_file):
         print(f"loading index: {index_file}")
@@ -114,8 +116,8 @@ if __name__ == '__main__':
         indexer.save_index(filename=index_file)
 
     for patient_file in ['topics2021', 'topics2022']:
-        run_name = f"submission_{patient_file}_{lemma}_all-options-eligibility"
-        return_top_n = 2500
+        run_name = f"submission_{patient_file}_{index_sufix}"
+        return_top_n = 3000
         submission_folder = '/newstorage4/wkusa/data/trec_cds/data/submissions/'
 
         infile = f"/home/wkusa/projects/TREC/trec-cds1/data/processed/{patient_file}.jsonl"
@@ -125,7 +127,8 @@ if __name__ == '__main__':
 
         for _patient_id in range(len(patients)):
             patients[_patient_id]['conditions'] = df.loc[_patient_id, "Conditions"]
-            patients[_patient_id]['cmh_keywords'] = df.loc[_patient_id, "description_keywords"]
+            patients[_patient_id]['keywords'] = df.loc[_patient_id, "description_keywords"]
+            patients[_patient_id]['cmh_keywords'] = df.loc[_patient_id, "keywords"]
 
         output_scores = {}
         for patient in tqdm(patients):

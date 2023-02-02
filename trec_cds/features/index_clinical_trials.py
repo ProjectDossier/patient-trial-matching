@@ -60,25 +60,25 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--clinical_trials_folder",
-        default="data/external/ClinicalTrials",
+        default="/newstorage4/wkusa/data/trec_cds/ClinicalTrials",
         type=str,
         help="path to a folder with clinical trials",
     )
     parser.add_argument(
         "--topic_file",
-        default="data/external/topics2021.xml",
+        default="/newstorage4/wkusa/data/trec_cds/data/external/topics2021.xml",
         type=str,
         help="path to an xml file with topics data",
     )
     parser.add_argument(
         "--model_outfile",
-        default="models/bm25-baseline1.p",
+        default="/newstorage4/wkusa/data/trec_cds/models/bm25-baseline1.p",
         type=str,
         help="path to an outfile where indexed model will be saved.",
     )
     parser.add_argument(
         "--results_outfile",
-        default="data/processed/bm25-baseline.json",
+        default="/newstorage4/wkusa/data/trec_cds/data/processed/bm25p-baseline-220824.json",
         type=str,
         help="path to an outfile where indexed results will be saved.",
     )

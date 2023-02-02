@@ -51,5 +51,3 @@ if __name__ == "__main__":
     options = get_displacy_options()
 
     displacy.serve(docs, style="ent", options=options)
-
-    # print(cts)

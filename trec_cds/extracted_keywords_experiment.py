@@ -2,20 +2,21 @@ from trec_cds.data.load_data_from_file import load_jsonl
 from trec_cds.features.build_features import ClinicalTrialsFeatures
 import datetime
 from trec_cds.features.index_clinical_trials import Indexer
-from trec_cds.models.trec_evaluation import load_qrels, print_line, read_bm25
+from trec_cds.models.trec_evaluation import load_qrels, print_line, read_bm25, write_line
 import pytrec_eval
 from typing import List
 from tqdm import tqdm
 import logging
+import json
+
 
 feature_builder = ClinicalTrialsFeatures(spacy_language_model_name='en_core_sci_lg')
 
 
-
-def eval(run, qrels_path):
+def eval(run, qrels_path, eval_measures= {"ndcg_cut_10", "P_10", "recip_rank", "ndcg_cut_5"}):
     qrels = load_qrels(qrels_path)
     evaluator = pytrec_eval.RelevanceEvaluator(
-        qrels, {"ndcg_cut_10", "P_10", "recip_rank", "ndcg_cut_5"}
+        qrels, eval_measures
     )
     results = evaluator.evaluate(run)
 
@@ -23,7 +24,7 @@ def eval(run, qrels_path):
         for measure, value in sorted(query_measures.items()):
             pass
             # print_line(measure, query_id, value)
-
+    output_string = ""
     for measure in sorted(query_measures.keys()):
         print_line(
             measure,
@@ -33,6 +34,14 @@ def eval(run, qrels_path):
                 [query_measures[measure] for query_measures in results.values()],
             ),
         )
+        output_string += write_line(measure,
+            "all",
+            pytrec_eval.compute_aggregated_measure(
+                measure,
+                [query_measures[measure] for query_measures in results.values()],
+            ),)
+
+    return output_string
 
 
 def get_sections(dict_item, options):
@@ -54,7 +63,8 @@ def get_sections(dict_item, options):
 
 def build_query(patient, options):
     sections = get_sections(patient, options=options)
-    text = feature_builder.preprocess_text(patient['current_medical_history'], lemmatised=True)
+    text = feature_builder.preprocess_text(patient['description'], lemmatised=False)
+    # text = feature_builder.preprocess_text(patient['current_medical_history'], lemmatised=True)
     text.extend(sections)
     return text
 
@@ -71,20 +81,23 @@ def build_index_input(clinical_trial, options):
     exclusion_sections = get_sections(exclusion_dict, options=options)
 
     sections = get_sections(clinical_trial['inclusion_criteria'], options=options)
-    input_text = f"{clinical_trial['brief_summary']} {clinical_trial['official_title']} {clinical_trial['brief_title']} {clinical_trial['detailed_description']} {' '.join(clinical_trial['conditions'])}  {clinical_trial['criteria']}"
-    text = feature_builder.preprocess_text(input_text, lemmatised=True)
+    input_text = f"{clinical_trial['brief_summary']} {clinical_trial['official_title']} {clinical_trial['brief_title']} {clinical_trial['detailed_description']} {' '.join(clinical_trial['conditions'])}  {' '.join(clinical_trial['inclusion'])}"
+    #input_text = f"{clinical_trial['brief_summary']} {clinical_trial['official_title']} {clinical_trial['brief_title']} {clinical_trial['detailed_description']} {' '.join(clinical_trial['conditions'])}  {clinical_trial['criteria']}"
+    text = feature_builder.preprocess_text(input_text, lemmatised=False)
     text.extend(sections)
     text.extend(exclusion_sections)
     return text
 
+
 if __name__ == '__main__':
     # for options in [['positive', 'negative', 'pmh', 'fh'], ['positive', 'negative', 'pmh'], ['positive', 'negative', 'fh'], ['positive', 'negative'], ['positive'], ['positive'], ['negative']]:
-    options = ['positive', 'negative', 'pmh', 'fh']
+    options = ['positive', 'negative', 'fh']
+    # options = []
     print(options)
     print('lemmatised')
-    run_name = "keywords_experiment"
-    return_top_n = 1000
-    submission_folder = '/newstorage4/wkusa/data/trec_cds/data/submissions/'
+    run_name = "keywords_experiment-anf-i"
+    return_top_n = 500
+    submission_folder = '/newstorage4/wkusa/data/trec_cds/data/processed/ecir2023/ie/'
 
     patient_file = 'topics2021'
     infile = f"../data/processed/{patient_file}.jsonl"
@@ -118,7 +131,11 @@ if __name__ == '__main__':
         )
 
 
-    results_file = f"{submission_folder}/bm25p-{run_name}-{datetime.datetime.now()}"
+    with open(f"{submission_folder}/bm25p-{run_name}-221020.json", "w") as fp:
+        json.dump(output_scores, fp)
+
+
+    results_file = f"{submission_folder}/bm25p-{run_name}-{datetime.datetime.today()}"
     logging.info("Converting total number of %d topics", len(output_scores))
     with open(results_file, "w") as fp:
         for topic_no in output_scores:
@@ -144,9 +161,14 @@ if __name__ == '__main__':
                 fp.write(line)
 
     print('NDCG:')
-    eval(run=read_bm25(results_file),
-         qrels_path="/home/wkusa/projects/trec-cds/data/external/qrels2021.txt")
+    output_results = eval(run=read_bm25(results_file),
+         qrels_path="/home/wkusa/projects/trec-cds/data/external/qrels2021.txt",
+                          eval_measures= {"ndcg_cut_10", "P_10", "recip_rank", "ndcg_cut_5"})
     print("\n\nprecison, RR:")
-    eval(run=read_bm25(results_file),
-         qrels_path="/home/wkusa/projects/TREC/trec-cds/data/external/qrels2021_binary.txt")
+    output_results += eval(run=read_bm25(results_file),
+         qrels_path="/home/wkusa/projects/TREC/trec-cds/data/external/qrels2021_binary.txt",
+                           eval_measures= {"P_10", "recip_rank"})
     print('\n\n')
+
+    with open(f"{submission_folder}/bm25p-{run_name}-221020-results", 'w') as fp:
+        fp.write(output_results)
