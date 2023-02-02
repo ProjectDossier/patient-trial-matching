@@ -1,5 +1,5 @@
 import argparse
-from typing import Dict, Optional
+from typing import Dict, Optional, Set
 
 import pytrec_eval
 
@@ -55,7 +55,7 @@ def write_line(measure: str, scope: str, value: float) -> str:
     return f"{measure:25s}\t{scope:8s}\t{value:.4f}\n"
 
 
-def evaluate(run, qrels_path, eval_measures: Optional[Dict] = None) -> str:
+def evaluate(run, qrels_path, eval_measures: Optional[Set[str]] = None) -> str:
     """Evaluates a run against the qrels.
     It prints the aggregated results and returns string with all.
     todo: problem when we want to evaluate multi graded relevance and binary then results are not ordered by query

@@ -1,4 +1,5 @@
 import argparse
+import datetime
 import json
 import logging
 from typing import List
@@ -11,6 +12,9 @@ from CTnlp.patient import load_patients_from_xml
 from trec_cds.features.build_features import ClinicalTrialsFeatures
 from trec_cds.features.index_clinical_trials import Indexer
 from trec_cds.models.trec_evaluation import read_bm25, evaluate
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -28,13 +32,13 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--results_folder",
-        default="/newstorage4/wkusa/data/trec_cds/data/processed/ecir2023/",
+        default="/newstorage4/wkusa/data/trec_cds/data/processed/jbi/",
         type=str,
         help="path to an outfile where indexed results will be saved.",
     )
     parser.add_argument(
         "--submission_folder",
-        default="/newstorage4/wkusa/data/trec_cds/data/processed/ecir2023/",
+        default="/newstorage4/wkusa/data/trec_cds/data/processed/jbi/",
         type=str,
         help="path to an outfile where indexed results will be saved.",
     )
@@ -44,27 +48,41 @@ if __name__ == "__main__":
         type=int,
         help="load only first n clinical trial documents (max is ~370k)",
     )
-
     parser.add_argument(
         "--return_top_n",
         default=500,
         type=int,
         help="return top n results from retrieval model",
     )
+    parser.add_argument(
+        "--binary_qrels",
+        type=str,
+        default="/home/wkusa/projects/trec-cds/data/external/qrels2021_binary.txt",
+        help="path to the binary qrels file",
+    )
+    parser.add_argument(
+        "--graded_qrels",
+        type=str,
+        default="/home/wkusa/projects/trec-cds/data/external/qrels2021.txt",
+        help="path to the graded qrels file",
+    )
 
     args = parser.parse_args()
 
+    TODAY: str = datetime.datetime.now().strftime("%Y%m%d")
+
+    logger.info("Loading clinical trials")
     cts = parse_clinical_trials_from_folder(
-        folder_name=args.clinical_trials_folder, first_n=None
+        folder_name=args.clinical_trials_folder, first_n=args.first_n
     )
 
+    logger.info("Preprocessing clinical trials")
     feature_builder = ClinicalTrialsFeatures(spacy_language_model_name="en_core_sci_lg")
     for clinical_trial in tqdm(cts):
         feature_builder.preprocess_clinical_trial(clinical_trial=clinical_trial)
 
+    logger.info("Loading patients from %s", args.topic_file)
     topics: List[Patient] = load_patients_from_xml(patient_file=args.topic_file)
-
-    print("lowercase, no punctuation, no stopwords, no keywords")
 
     options = {
         "brief_title": [x.brief_title for x in cts],
@@ -116,7 +134,7 @@ if __name__ == "__main__":
     }
 
     for option, cts_list in options.items():
-        print(f"\n{option=}")
+        logger.info("Indexing %s", option)
         cts_tokenized = []
 
         for _clinical_trial in tqdm(cts_list):
@@ -139,29 +157,38 @@ if __name__ == "__main__":
         lookup_table = {x_index: x.nct_id for x_index, x in enumerate(cts)}
         indexer = Indexer()
         indexer.index_text(text=cts_tokenized, lookup_table=lookup_table)
+        logger.info("Indexing complete")
 
+        logger.info("Querying %s", option)
         output_scores = {}
         for topic in topics:
-            doc = feature_builder.preprocess_text(topic.description)
+            doc = feature_builder.preprocess_text(
+                topic.description,
+                no_stopwords=True,
+                no_punctuation=True,
+                lemmatised=False,
+            )
             doc = [x.lower() for x in doc if x.strip()]
             output_scores[topic.patient_id] = indexer.query_single(
                 query=doc, return_top_n=args.return_top_n
             )
+        logger.info("Querying complete")
 
-        with open(f"{args.results_folder}/bm25p-{option}-221020.json", "w") as fp:
+        with open(f"{args.results_folder}/bm25p-{option}-{TODAY}.json", "w") as fp:
             json.dump(output_scores, fp)
 
-        results = output_scores
+        run_output_file = f"{args.submission_folder}/bm25p-{option}-{TODAY}"
+        run_results_file = f"{args.submission_folder}/bm25p-{option}-{TODAY}-results"
 
         logging.info("Converting total number of %d topics", len(output_scores))
-        with open(f"{args.submission_folder}/bm25p-{option}-221020", "w") as fp:
-            for topic_no in results:
+        with open(run_output_file, "w") as fp:
+            for topic_no in output_scores:
                 logging.info("working on topic: %s", topic_no)
 
                 sorted_results = {
                     k: v
                     for k, v in sorted(
-                        results[topic_no].items(),
+                        output_scores[topic_no].items(),
                         key=lambda item: item[1],
                         reverse=True,
                     )
@@ -179,17 +206,18 @@ if __name__ == "__main__":
                     line = f"{topic_no} Q0 {doc} {rank + 1} {score} {option}\n"
                     fp.write(line)
 
+        logger.info("Evaluating %s", option)
         output_results = evaluate(
-            run=read_bm25(f"{args.submission_folder}/bm25p-{option}-221020"),
-            qrels_path="/home/wkusa/projects/trec-cds/data/external/qrels2021.txt",
+            run=read_bm25(run_output_file),
+            qrels_path=args.graded_qrels,
             eval_measures={"ndcg_cut_10", "P_10", "recip_rank", "ndcg_cut_5"},
         )
 
         output_results += evaluate(
-            run=read_bm25(f"{args.submission_folder}/bm25p-{option}-221020"),
-            qrels_path="/home/wkusa/projects/TREC/trec-cds/data/external/qrels2021_binary.txt",
+            run=read_bm25(run_output_file),
+            qrels_path=args.binary_qrels,
             eval_measures={"P_10", "recip_rank"},
         )
 
-        with open(f"{args.submission_folder}/bm25p-{option}-221020-results", "w") as fp:
+        with open(run_results_file, "w") as fp:
             fp.write(output_results)
