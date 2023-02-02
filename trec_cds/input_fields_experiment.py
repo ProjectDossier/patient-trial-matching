@@ -78,8 +78,6 @@ if __name__ == "__main__":
 
     logger.info("Preprocessing clinical trials")
     feature_builder = ClinicalTrialsFeatures(spacy_language_model_name="en_core_sci_lg")
-    for clinical_trial in tqdm(cts):
-        feature_builder.preprocess_clinical_trial(clinical_trial=clinical_trial)
 
     logger.info("Loading patients from %s", args.topic_file)
     topics: List[Patient] = load_patients_from_xml(patient_file=args.topic_file)
@@ -130,7 +128,18 @@ if __name__ == "__main__":
             f"{x.brief_summary} {x.official_title} {x.brief_title} {x.detailed_description} {' '.join(x.conditions)}  {x.criteria}"
             for x in cts
         ],
-        "all": [x.text_preprocessed for x in cts],
+        "summary_description_titles_eligibility": [
+            f"{x.brief_summary} {x.official_title} {x.brief_title} {x.detailed_description}  {x.criteria}"
+            for x in cts
+        ],
+        "summary_description_titles_inclusion": [
+            f"{x.brief_summary} {x.official_title} {x.brief_title} {x.detailed_description}  {' '.join(x.inclusion)}"
+            for x in cts
+        ],
+        "summary_description_titles_exclusion": [
+            f"{x.brief_summary} {x.official_title} {x.brief_title} {x.detailed_description}  {' '.join(x.exclusion)}"
+            for x in cts
+        ],
     }
 
     for option, cts_list in options.items():
@@ -183,7 +192,6 @@ if __name__ == "__main__":
         logging.info("Converting total number of %d topics", len(output_scores))
         with open(run_output_file, "w") as fp:
             for topic_no in output_scores:
-                logging.info("working on topic: %s", topic_no)
 
                 sorted_results = {
                     k: v
@@ -194,7 +202,6 @@ if __name__ == "__main__":
                     )
                 }
 
-                logging.info("normalizing results")
                 max_value = max(sorted_results.values())
                 sorted_results = {k: v / max_value for k, v in sorted_results.items()}
 

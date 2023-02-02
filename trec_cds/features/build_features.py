@@ -41,11 +41,12 @@ class ClinicalTrialsFeatures:
                 "tagger",
                 "parser",
                 "attribute_ruler",
+                "lemmatizer",
             ],
         )
         logging.info("loaded spacy language model for preprocessing Clinical Trials")
 
-    def preprocess_clinical_trial(self, clinical_trial: ClinicalTrial, no_stopwords=True, no_punctuation=True, lemmatised=True) -> None:
+    def preprocess_clinical_trial(self, clinical_trial: ClinicalTrial, no_stopwords=True, no_punctuation=True, lemmatised=False) -> None:
         """Preprocesses a clinical trial text field using spacy tokenizer and removing
         stopwords. Preprocessed text is saved to a variable in the clinical_trial
         object."""
