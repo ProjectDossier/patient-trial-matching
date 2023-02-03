@@ -7,7 +7,6 @@ from trec_cds.data.load_data_from_file import load_jsonl
 
 
 def add_filter_for_x(ct, x: List[str]):
-    accepts_x = None
     inclusion_occurence = 0
     exclusion_occurence = 0
     for keyword in x:
@@ -22,12 +21,11 @@ def add_filter_for_x(ct, x: List[str]):
             exclusion_occurence += 1
 
     if inclusion_occurence + exclusion_occurence > 0:
-        accepts_x = True
+        return True
     elif inclusion_occurence + exclusion_occurence < 0:
-        accepts_x = False
+        return False
     else:
-        accepts_x = "No info"
-    return accepts_x
+        return "No info"
 
 
 def create_new_filters(cts):
@@ -42,9 +40,18 @@ def postprocessing(
     output_file: str,
     clinical_trials_dict: Dict[str, Dict[str, str]],
     patients: List[Dict[str, str]],
+    options: List[str],
 ):
     """Post processes result file by removing gender, age and health status mismatches
-    between topic and clinical trial data."""
+    between topic and clinical trial data.
+
+    :param result_filename:
+    :param output_file:
+    :param clinical_trials_dict:
+    :param patients:
+    :param options: list of options: 'age', 'gender',...
+    :return:
+    """
     with open(result_filename) as fp:
         results = json.load(fp)
 
@@ -59,18 +66,11 @@ def postprocessing(
         checked = 0
 
         for nct_id, score in results[topic_no].items():
-            healthy = patients[int(topic_no) - 1]["is_healthy"]
-            gender = patients[int(topic_no) - 1]["gender"]
-            age = patients[int(topic_no) - 1]["age"]
-            is_smoker = patients[int(topic_no) - 1]["is_smoker"]
-            is_drinker = patients[int(topic_no) - 1]["is_drinker"]
-
-            clinical_trial = clinical_trials_dict.get(nct_id, {})
-            if clinical_trial:
+            if clinical_trial := clinical_trials_dict.get(nct_id, {}):
                 checked += 1
-                if clinical_trial["gender"] != gender and clinical_trial[
-                    "gender"
-                ] not in [
+                gender = patients[int(topic_no) - 1]["gender"]
+                if "gender" in options and clinical_trial["gender"] not in [
+                    gender,
                     "A",
                     "U",
                 ]:
@@ -78,38 +78,55 @@ def postprocessing(
                     excluded_num += 1
                     continue
 
-                if (
-                    age != -1
-                    and clinical_trial["minimum_age"]
-                    and age < clinical_trial["minimum_age"]
-                ):
-                    logging.info("skipping because of minimum_age age")
-                    excluded_num += 1
-                    continue
-                if (
-                    age != -1
-                    and clinical_trial["maximum_age"]
-                    and age > clinical_trial["maximum_age"]
-                ):
-                    logging.info("skipping because of maximum_age age")
-                    excluded_num += 1
-                    continue
+                if "age" in options:
+                    age = patients[int(topic_no) - 1]["age"]
+                    if (
+                        age != -1
+                        and clinical_trial["minimum_age"]
+                        and age < clinical_trial["minimum_age"]
+                    ):
+                        logging.info("skipping because of minimum_age age")
+                        excluded_num += 1
+                        continue
+                    if (
+                        age != -1
+                        and clinical_trial["maximum_age"]
+                        and age > clinical_trial["maximum_age"]
+                    ):
+                        logging.info("skipping because of maximum_age age")
+                        excluded_num += 1
+                        continue
 
-                if is_smoker and not clinical_trial["accepts_smokers"]:
+                is_smoker = patients[int(topic_no) - 1]["is_smoker"]
+                if (
+                    "smoking" in options
+                    and is_smoker
+                    and not clinical_trial["accepts_smokers"]
+                ):
                     logging.info(
                         "skipping because of smoker and trial does not accept smokers"
                     )
                     excluded_num += 1
                     continue
 
-                if is_drinker and not clinical_trial["accepts_drinkers"]:
+                is_drinker = patients[int(topic_no) - 1]["is_drinker"]
+                if (
+                    "drinking" in options
+                    and is_drinker
+                    and not clinical_trial["accepts_drinkers"]
+                ):
                     logging.info(
                         "skipping because of drinker and trial does not accept drinkers"
                     )
                     excluded_num += 1
                     continue
 
-                if healthy and not clinical_trial["accepts_healthy_volunteers"]:
+                healthy = patients[int(topic_no) - 1]["is_healthy"]
+                if (
+                    "healthy" in options
+                    and healthy
+                    and not clinical_trial["accepts_healthy_volunteers"]
+                ):
                     logging.info("trial not accepting healthy volunteers")
                     excluded_num += 1
                     continue
@@ -131,7 +148,6 @@ def postprocessing(
 
 
 if __name__ == "__main__":
-    # lemma = 'lemma'
     lemma = "not_lemma"
 
     submission_folder = "/newstorage4/wkusa/data/trec_cds/data/submissions/"
@@ -159,4 +175,5 @@ if __name__ == "__main__":
             output_file=f"{submission_folder}/bm25p-postprocessed-{patient_file}-{lemma}_pnf_eligibility_all-text_all-keywords.json",
             clinical_trials_dict=cts_dict,
             patients=patients,
+            options=['age', 'gender']
         )

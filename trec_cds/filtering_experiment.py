@@ -1,3 +1,5 @@
+import argparse
+import logging
 import os
 
 from trec_cds.data.load_data_from_file import load_jsonl
@@ -5,61 +7,128 @@ from trec_cds.data.trec_submission import convert_to_trec_submission
 from trec_cds.models.postprocessing import create_new_filters, postprocessing
 from trec_cds.models.trec_evaluation import read_bm25, evaluate
 
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
+
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--trials_file",
+        default="/newstorage4/wkusa/data/trec_cds/trials_parsed-new.jsonl",
+        type=str,
+        help="clinical trials parsed into a jsonl file",
+    )
+    parser.add_argument(
+        "--topic_file",
+        default="/home/wkusa/projects/trec-cds/data/processed/topics2021.jsonl",
+        type=str,
+        help="path to a jsonl file with topics data",
+    )
+    parser.add_argument(
+        "--runs_folder",
+        default="/newstorage4/wkusa/data/trec_cds/data/processed/jbi/ie/2021/",
+        type=str,
+        help="path to folder which contains runs for filtering experiment.",
+    )
+    parser.add_argument(
+        "--output_folder",
+        default="/newstorage4/wkusa/data/trec_cds/data/processed/jbi/ie_filtered/2021/",
+        type=str,
+        help="path to an outfile where indexed results and evaluations will be saved.",
+    )
+    parser.add_argument(
+        "--return_top_n",
+        default=500,
+        type=int,
+        help="return top n results from retrieval model",
+    )
+    parser.add_argument(
+        "--binary_qrels",
+        type=str,
+        default="/home/wkusa/projects/trec-cds/data/external/qrels2021_binary.txt",
+        help="path to the binary qrels file",
+    )
+    parser.add_argument(
+        "--graded_qrels",
+        type=str,
+        default="/home/wkusa/projects/trec-cds/data/external/qrels2021.txt",
+        help="path to the graded qrels file",
+    )
+    args = parser.parse_args()
 
-    lemma = "not_lemma"
+    filtering_options = {
+        "age": ["age"],
+        "gender": ["gender"],
+        "age_gender": ["age", "gender"],
+        "smoking": ["smoking"],
+        "drinking": ["drinking"],
+        "smoking_drinking": ["smoking", "drinking"],
+        "age_gender_smoking_drinking": ["age", "gender", "smoking", "drinking"],
+    }
 
-    submission_folder = "/newstorage4/wkusa/data/trec_cds/data/submissions/"
-
-    trials_file = "/newstorage4/wkusa/data/trec_cds/trials_parsed-new.jsonl"
-    trials = load_jsonl(trials_file)
+    logger.info("Loading clinical trials and patients data")
+    trials = load_jsonl(args.trials_file)
     trials = create_new_filters(trials)
-
     cts_dict = {ct["nct_id"]: ct for ct in trials}
 
-    patient_file = "topics2021"
-    infile = f"/home/wkusa/projects/TREC/trec-cds1/data/processed/{patient_file}.jsonl"
-    patients = load_jsonl(infile)
+    patients = load_jsonl(args.topic_file)
+    logger.info("Loaded clinical trials and patients data")
 
-    # "bm25p-submission_topics2021_not_lemma_pnfp_eligibility_all-text_cmh-keywords-2022-08-28"
-    output_file = ""
-    processed_data_folder = (
-        "/newstorage4/wkusa/data/trec_cds/data/processed/ecir2023/ie/"
-    )
-    run_files = os.listdir(processed_data_folder)
+    run_files = os.listdir(args.runs_folder)
     for run_file in run_files:
+        # we only work with raw json files, other files are trec submissions or evaluation results
         if not run_file.endswith("json"):
             continue
-        print(run_file)
-
-        # first_stage_results_file = f"{submission_folder}/bm25p-submission_{patient_file}_{lemma}-2022-08-28 12:05:34.101636.json"
-        # first_stage_results_file = f"{submission_folder}/bm25p-submission_{patient_file}_{lemma}_pnf_eligibility_all-text_cmh-keywords-2022-08-28.json"
-        # run_name = f"submission_{patient_file}_{lemma}"
-
-        filtered_submission_json = f"{processed_data_folder}/filtered_{run_file}.json"
+        run = f"{args.runs_folder}/{run_file}"
         run_name = f"filtered_{run_file[:-5]}"
-        filtered_submission_trec = f"{processed_data_folder}/{run_name}"
-        postprocessing(
-            result_filename=f"{processed_data_folder}/{run_file}",
-            output_file=filtered_submission_json,
-            clinical_trials_dict=cts_dict,
-            patients=patients,
+
+        logger.info("Evaluating unfiltered run: %s", run_name)
+        evaluate(
+            run=read_bm25(f"{args.runs_folder}/{run_name}"),
+            qrels_path=args.graded_qrels,
+            eval_measures={"ndcg_cut_5", "ndcg_cut_10"},
         )
-
-        convert_to_trec_submission(
-            result_filename=filtered_submission_json,
-            run_name=run_name,
-            output_folder=processed_data_folder,
-            trim_scores_less_than=0.10,
+        evaluate(
+            run=read_bm25(f"{args.runs_folder}/{run_name}"),
+            qrels_path=args.binary_qrels,
+            eval_measures={"P_10", "recip_rank"},
         )
+        logger.info("Finished evaluating unfiltered run: %s", run_name)
 
-        output_results = evaluate(run=read_bm25(filtered_submission_trec),
-                                  qrels_path="/home/wkusa/projects/trec-cds/data/external/qrels2021.txt",
-                                  eval_measures={"ndcg_cut_10", "P_10", "recip_rank", "ndcg_cut_5"})
+        logger.info(f"Filtering run: {run_name}")
 
-        output_results += evaluate(run=read_bm25(filtered_submission_trec),
-                                   qrels_path="/home/wkusa/projects/TREC/trec-cds/data/external/qrels2021_binary.txt",
-                                   eval_measures={"P_10", "recip_rank"})
+        for option_name, options in filtering_options.items():
 
-        with open(f"{filtered_submission_trec}-results", "w") as fp:
-            fp.write(output_results)
+            filtered_submission_json = f"{args.output_folder}/{run_name}_{option_name}.json"
+            filtered_submission_trec = f"{args.output_folder}/{run_name}_{option_name}"
+            filtered_results_file = f"{args.output_folder}/{run_name}_{option_name}-results"
+            postprocessing(
+                result_filename=run,
+                output_file=filtered_submission_json,
+                clinical_trials_dict=cts_dict,
+                patients=patients,
+                options=options
+            )
+            convert_to_trec_submission(
+                result_filename=filtered_submission_json,
+                run_name=run_name,
+                output_folder=args.output_folder,
+                trim_scores_less_than=0.10,
+            )
+            logger.info("Finished filtering run: %s\t%s", (run_name, option_name))
+
+            logger.info("Evaluating filtered run: %s\t%s", (run_name, option_name))
+            output_results = evaluate(
+                run=read_bm25(filtered_submission_trec),
+                qrels_path=args.graded_qrels,
+                eval_measures={"ndcg_cut_5", "ndcg_cut_10"},
+            )
+            output_results += evaluate(
+                run=read_bm25(filtered_submission_trec),
+                qrels_path=args.binary_qrels,
+                eval_measures={"P_10", "recip_rank"},
+            )
+
+            with open(filtered_results_file, "w") as fp:
+                fp.write(output_results)
+            logger.info("Finished evaluating filtered run: %s\t%s", (run_name, option_name))

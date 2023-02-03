@@ -217,7 +217,7 @@ if __name__ == "__main__":
         output_results = evaluate(
             run=read_bm25(run_output_file),
             qrels_path=args.graded_qrels,
-            eval_measures={"ndcg_cut_10", "P_10", "recip_rank", "ndcg_cut_5"},
+            eval_measures={"ndcg_cut_5", "ndcg_cut_10"},
         )
 
         output_results += evaluate(
