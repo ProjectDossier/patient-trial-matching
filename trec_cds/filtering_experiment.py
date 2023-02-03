@@ -37,12 +37,6 @@ if __name__ == "__main__":
         help="path to an outfile where indexed results and evaluations will be saved.",
     )
     parser.add_argument(
-        "--return_top_n",
-        default=500,
-        type=int,
-        help="return top n results from retrieval model",
-    )
-    parser.add_argument(
         "--binary_qrels",
         type=str,
         default="/home/wkusa/projects/trec-cds/data/external/qrels2021_binary.txt",
@@ -80,7 +74,7 @@ if __name__ == "__main__":
         if not run_file.endswith("json"):
             continue
         run = f"{args.runs_folder}/{run_file}"
-        run_name = f"filtered_{run_file[:-5]}"
+        run_name = f"{run_file[:-5]}"
 
         logger.info("Evaluating unfiltered run: %s", run_name)
         evaluate(
