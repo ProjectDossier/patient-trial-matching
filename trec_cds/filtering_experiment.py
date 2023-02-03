@@ -116,9 +116,9 @@ if __name__ == "__main__":
                 run_name=f"{run_name}_{option_name}",
                 output_folder=args.output_folder,
             )
-            logger.info("Finished filtering run: %s\t%s", (run_name, option_name))
+            logger.info("Finished filtering run: %s\t%s", run_name, option_name)
 
-            logger.info("Evaluating filtered run: %s\t%s", (run_name, option_name))
+            logger.info("Evaluating filtered run: %s\t%s", run_name, option_name)
             output_results = evaluate(
                 run=read_bm25(filtered_submission_trec),
                 qrels_path=args.graded_qrels,
@@ -133,5 +133,5 @@ if __name__ == "__main__":
             with open(filtered_results_file, "w") as fp:
                 fp.write(output_results)
             logger.info(
-                "Finished evaluating filtered run: %s\t%s", (run_name, option_name)
+                "Finished evaluating filtered run: %s\t%s", run_name, option_name
             )
