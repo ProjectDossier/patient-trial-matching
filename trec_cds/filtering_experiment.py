@@ -60,6 +60,9 @@ if __name__ == "__main__":
         "age_gender_smoking_drinking": ["age", "gender", "smoking", "drinking"],
     }
 
+    if not os.path.exists(args.output_folder):
+        os.makedirs(args.output_folder)
+
     logger.info("Loading clinical trials and patients data")
     trials = load_jsonl(args.trials_file)
     trials = create_new_filters(trials)
