@@ -61,7 +61,7 @@ def postprocessing(
     output_scores = {}
     for topic_no in results:
         included = {}
-        logging.info(topic_no)
+        logging.debug(topic_no)
         excluded_num = 0
         checked = 0
 
@@ -74,7 +74,7 @@ def postprocessing(
                     "A",
                     "U",
                 ]:
-                    logging.info("gender mismatch")
+                    logging.debug("excluding because of gender mismatch")
                     excluded_num += 1
                     continue
 
@@ -85,7 +85,7 @@ def postprocessing(
                         and clinical_trial["minimum_age"]
                         and age < clinical_trial["minimum_age"]
                     ):
-                        logging.info("skipping because of minimum_age age")
+                        logging.debug("excluding because of minimum_age age mismatch")
                         excluded_num += 1
                         continue
                     if (
@@ -93,7 +93,7 @@ def postprocessing(
                         and clinical_trial["maximum_age"]
                         and age > clinical_trial["maximum_age"]
                     ):
-                        logging.info("skipping because of maximum_age age")
+                        logging.debug("excluding because of maximum_age age mismatch")
                         excluded_num += 1
                         continue
 
@@ -103,8 +103,8 @@ def postprocessing(
                     and is_smoker
                     and not clinical_trial["accepts_smokers"]
                 ):
-                    logging.info(
-                        "skipping because of smoker and trial does not accept smokers"
+                    logging.debug(
+                        "excluding because of a smoker and trial does not accept smokers"
                     )
                     excluded_num += 1
                     continue
@@ -115,8 +115,8 @@ def postprocessing(
                     and is_drinker
                     and not clinical_trial["accepts_drinkers"]
                 ):
-                    logging.info(
-                        "skipping because of drinker and trial does not accept drinkers"
+                    logging.debug(
+                        "excluding because of a drinker and trial does not accept drinkers"
                     )
                     excluded_num += 1
                     continue
@@ -127,7 +127,7 @@ def postprocessing(
                     and healthy
                     and not clinical_trial["accepts_healthy_volunteers"]
                 ):
-                    logging.info("trial not accepting healthy volunteers")
+                    logging.debug("trial not accepting healthy volunteers")
                     excluded_num += 1
                     continue
 

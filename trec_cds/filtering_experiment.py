@@ -3,7 +3,9 @@ import logging
 import os
 
 from trec_cds.data.load_data_from_file import load_jsonl
-from trec_cds.data.trec_submission import convert_to_trec_submission
+from trec_cds.data.trec_submission import (
+    convert_to_trec_fast,
+)
 from trec_cds.models.postprocessing import create_new_filters, postprocessing
 from trec_cds.models.trec_evaluation import read_bm25, evaluate
 
@@ -95,22 +97,24 @@ if __name__ == "__main__":
         logger.info(f"Filtering run: {run_name}")
 
         for option_name, options in filtering_options.items():
-
-            filtered_submission_json = f"{args.output_folder}/{run_name}_{option_name}.json"
+            filtered_submission_json = (
+                f"{args.output_folder}/{run_name}_{option_name}.json"
+            )
             filtered_submission_trec = f"{args.output_folder}/{run_name}_{option_name}"
-            filtered_results_file = f"{args.output_folder}/{run_name}_{option_name}-results"
+            filtered_results_file = (
+                f"{args.output_folder}/{run_name}_{option_name}-results"
+            )
             postprocessing(
                 result_filename=run,
                 output_file=filtered_submission_json,
                 clinical_trials_dict=cts_dict,
                 patients=patients,
-                options=options
+                options=options,
             )
-            convert_to_trec_submission(
+            convert_to_trec_fast(
                 result_filename=filtered_submission_json,
-                run_name=run_name,
+                run_name=f"{run_name}_{option_name}",
                 output_folder=args.output_folder,
-                trim_scores_less_than=0.10,
             )
             logger.info("Finished filtering run: %s\t%s", (run_name, option_name))
 
@@ -128,4 +132,6 @@ if __name__ == "__main__":
 
             with open(filtered_results_file, "w") as fp:
                 fp.write(output_results)
-            logger.info("Finished evaluating filtered run: %s\t%s", (run_name, option_name))
+            logger.info(
+                "Finished evaluating filtered run: %s\t%s", (run_name, option_name)
+            )

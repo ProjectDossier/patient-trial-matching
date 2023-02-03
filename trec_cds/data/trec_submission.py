@@ -6,6 +6,41 @@ from typing import Union
 logging.basicConfig(level=logging.INFO)
 
 
+def convert_to_trec_fast(result_filename: str, run_name: str, output_folder: str):
+    """converts without trimming
+
+    :param result_filename:
+    :param run_name:
+    :param output_folder:
+    :return:
+    """
+    with open(result_filename) as fp:
+        results = json.load(fp)
+
+    if not os.path.isdir(output_folder):
+        os.makedirs(output_folder)
+
+    logging.info("Converting total number of %d topics", len(results))
+    with open(f"{output_folder}/{run_name}", "w") as fp:
+        for topic_no in results:
+            sorted_results = {
+                k: v
+                for k, v in sorted(
+                    results[topic_no].items(), key=lambda item: item[1], reverse=True
+                )
+            }
+            max_value = max(sorted_results.values())
+            sorted_results = {k: v / max_value for k, v in sorted_results.items()}
+
+            for rank, doc in enumerate(sorted_results):
+                if rank >= 1000:  # TREC submission allows max top 1000 results
+                    break
+                score = sorted_results[doc]
+
+                line = f"{topic_no} Q0 {doc} {rank + 1} {score} {run_name}\n"
+                fp.write(line)
+
+
 def convert_to_trec_submission(
     result_filename: str,
     run_name: str,
