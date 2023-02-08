@@ -12,20 +12,22 @@ from CTnlp.patient import Patient
 from CTnlp.utils import Gender
 
 
-def normalise_smoking(negated_entities, positive_entities):
-    if "smoke" in negated_entities:
-        return False
-
-    if "smoke" in positive_entities:
-        return True
+def normalise_smoking(current_medical_history:List[Dict[str, str]]):
+    for cmh in current_medical_history:
+        if cmh["text"] in ["smoking", 'smoke']:
+            if cmh["negated"]:
+                return False
+            else:
+                return True
     return None
 
-def normalise_drinking(negated_entities, positive_entities):
-    if "alcohol" in negated_entities:
-        return False
-
-    if "alcohol" in positive_entities:
-        return True
+def normalise_drinking(current_medical_history:List[Dict[str, str]]):
+    for cmh in current_medical_history:
+        if cmh["text"] == "alcohol":
+            if cmh["negated"]:
+                return False
+            else:
+                return True
     return None
 
 

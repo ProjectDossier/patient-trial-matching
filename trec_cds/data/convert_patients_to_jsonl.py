@@ -28,10 +28,10 @@ def convert_patients_to_jsonl(patients: List[Patient], outfile: str) -> None:
             entities = ee_model.get_entities(patient.description)
             patient_dict.update(entities)
             patient_dict["is_smoker"] = normalise_smoking(
-                patient_dict["negated_entities"], patient_dict["positive_entities"]
+                patient_dict["cmh_entities"]
             )
             patient_dict["is_drinker"] = normalise_drinking(
-                patient_dict["negated_entities"], patient_dict["positive_entities"]
+                patient_dict["cmh_entities"]
             )
 
             fp.write(json.dumps(patient_dict))

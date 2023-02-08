@@ -32,13 +32,13 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--results_folder",
-        default="/newstorage4/wkusa/data/trec_cds/data/processed/jbi/",
+        default="/newstorage4/wkusa/data/trec_cds/data/processed/jbi/sections/2021/",
         type=str,
         help="path to an outfile where indexed results will be saved.",
     )
     parser.add_argument(
         "--submission_folder",
-        default="/newstorage4/wkusa/data/trec_cds/data/processed/jbi/",
+        default="/newstorage4/wkusa/data/trec_cds/data/processed/jbi/sections/2021/",
         type=str,
         help="path to an outfile where indexed results will be saved.",
     )
@@ -228,3 +228,5 @@ if __name__ == "__main__":
 
         with open(run_results_file, "w") as fp:
             fp.write(output_results)
+
+        logger.info("Evaluation results saved for %s", option)

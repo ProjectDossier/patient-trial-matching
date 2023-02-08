@@ -1,3 +1,4 @@
+import argparse
 import json
 from dataclasses import asdict
 from typing import List
@@ -31,11 +32,23 @@ def convert_trials_to_jsonl(trials: List[ClinicalTrial], outfile: str) -> None:
 
 
 if __name__ == "__main__":
-    INPUT_DATA = "/newstorage4/wkusa/data/trec_cds/ClinicalTrials/"
-    OUTFILE = "/newstorage4/wkusa/data/trec_cds/trials_parsed-new.jsonl"
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--input_data",
+        type=str,
+        default="/newstorage4/wkusa/data/trec_cds/ClinicalTrials/",
+        help="Path to the folder containing the clinical trials.",
+    )
+    parser.add_argument(
+        "--outfile",
+        type=str,
+        default="/newstorage4/wkusa/data/trec_cds/trials_parsed-jbi.jsonl",
+        help="Path to the output file.",
+    )
+    args = parser.parse_args()
 
     ee_model = EntityExtraction()
 
-    cts = parse_clinical_trials_from_folder(folder_name=INPUT_DATA)
+    cts = parse_clinical_trials_from_folder(folder_name=args.input_data)
 
-    convert_trials_to_jsonl(trials=cts, outfile=OUTFILE)
+    convert_trials_to_jsonl(trials=cts, outfile=args.outfile)
