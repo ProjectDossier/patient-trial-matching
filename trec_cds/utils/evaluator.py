@@ -71,7 +71,7 @@ class Evaluator:
                 "bm25_score"
             ],
             converters={"qid": str},
-            sep=" "
+            sep="\t"
         )
 
         qrels_map = qrels.rename(
