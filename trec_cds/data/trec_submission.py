@@ -6,7 +6,42 @@ from typing import Union
 logging.basicConfig(level=logging.INFO)
 
 
-def convert_to_trac_submission(
+def convert_to_trec_fast(result_filename: str, run_name: str, output_folder: str):
+    """converts without trimming
+
+    :param result_filename:
+    :param run_name:
+    :param output_folder:
+    :return:
+    """
+    with open(result_filename) as fp:
+        results = json.load(fp)
+
+    if not os.path.isdir(output_folder):
+        os.makedirs(output_folder)
+
+    logging.info("Converting total number of %d topics", len(results))
+    with open(f"{output_folder}/{run_name}", "w") as fp:
+        for topic_no in results:
+            sorted_results = {
+                k: v
+                for k, v in sorted(
+                    results[topic_no].items(), key=lambda item: item[1], reverse=True
+                )
+            }
+            max_value = max(sorted_results.values())
+            sorted_results = {k: v / max_value for k, v in sorted_results.items()}
+
+            for rank, doc in enumerate(sorted_results):
+                if rank >= 1000:  # TREC submission allows max top 1000 results
+                    break
+                score = sorted_results[doc]
+
+                line = f"{topic_no} Q0 {doc} {rank + 1} {score} {run_name}\n"
+                fp.write(line)
+
+
+def convert_to_trec_submission(
     result_filename: str,
     run_name: str,
     output_folder: str,
@@ -66,9 +101,9 @@ def convert_to_trac_submission(
 
 
 if __name__ == "__main__":
-    convert_to_trac_submission(
-        result_filename="data/processed/bm25-baseline-postprocessed-reranked-4000.json",
-        run_name="rerank4000",
-        output_folder="data/processed/submissions/",
-        trim_scores_less_than=0.20,
+    convert_to_trec_submission(
+        result_filename="/newstorage4/wkusa/data/trec_cds/data/submissions/bm25p-postprocessed-topics2022-not_lemma_pnf_eligibility_all-text_all-keywords.json",
+        run_name="BM25pe-f-pnf-akc-2022",
+        output_folder="data/processed/submissions/2022/",
+        trim_scores_less_than=0.10,
     )
