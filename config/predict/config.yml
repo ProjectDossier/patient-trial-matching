@@ -1,12 +1,12 @@
 ---
-easy:
-  BATCH_SIZE: 2
-  N_SAMPLES: 4
-  MODEL_NAME: "bert-base-uncased"
+easy_BIO:
+  BATCH_SIZE: 32
+  N_SAMPLES: 50
+  MODEL_NAME: "seiya/oubiobert-base-uncased"
   MODEL_ALIAS: "crossencoder"
   LOGGER_NAME: "crossencoder"
-  CHECKPOINT: "best-checkpoint-v1.ckpt"
-  GPUS: null
+  CHECKPOINT: "best-checkpoint-v4.ckpt"
+  GPUS: [0]
   MODE: "predict_w_labels"
   FIELDS: [
       'conditions',
@@ -17,18 +17,18 @@ easy:
   ]
   QUERY_REPR: "description"
   RELEVANT_LABELS: [1, 2]
-  PATH_2_RUN: "../../reports/DoSSIER_1.txt"
-  PATH_2_QRELS: "../../data/raw/qrels_Judgment-of-0-is-non-relevant-1-is-excluded-and-2-is-eligible.txt"
+  PATH_2_RUN: "../../reports/DoSSIER_2"
+  PATH_2_QRELS: "../../data/raw/2022_qrels_Judgment-of-0-is-non-relevant-2-is-excluded-and-2-is-eligible.txt"
 
 DoSSIER_5_easy:
   BATCH_SIZE: 256
   N_SAMPLES: 50
-  MODEL_NAME: "bert-base-uncased"
-  MODEL_ALIAS: "crossencoder"
-  LOGGER_NAME: "crossencoder"
-  CHECKPOINT: "best-checkpoint-v4.ckpt"
+  MODEL_NAME: seiya/oubiobert-base-uncased
+  MODEL_ALIAS: "BIO_crossencoder"
+  LOGGER_NAME: "BIO_crossencoder"
+  CHECKPOINT: "best-checkpoint.ckpt"
   GPUS: [0]
-  MODE: "pred_w_no_labels"
+  MODE: "predict_w_labels"
   FIELDS: [
     'conditions',
     'brief_title',
@@ -39,22 +39,57 @@ DoSSIER_5_easy:
   QUERY_REPR: "description"
   RELEVANT_LABELS: [1, 2]
   PATH_2_RUN: "../../reports/DoSSIER_2"
-  PATH_2_QRELS: "../../data/raw/qrels_Judgment-of-0-is-non-relevant-1-is-excluded-and-2-is-eligible.txt"
+  PATH_2_QRELS: "../../data/raw/2022_qrels_Judgment-of-0-is-non-relevant-2-is-excluded-and-2-is-eligible.txt"
+  VERSION: 2022
 
 DoSSIER_5_difficult:
   BATCH_SIZE: 256
-  N_SAMPLES: 50
-  MODEL_NAME: "bert-base-uncased"
-  MODEL_ALIAS: "crossencoder"
-  LOGGER_NAME: "crossencoder"
-  CHECKPOINT: "best-checkpoint-v4.ckpt"
+  N_SAMPLES: 100
+  MODEL_NAME: seiya/oubiobert-base-uncased
+  MODEL_ALIAS: "BIO_crossencoder"
+  LOGGER_NAME: "BIO_crossencoder"
+  CHECKPOINT: "best-checkpoint-v1.ckpt"
   GPUS: [ 0 ]
-  MODE: "pred_w_no_labels"
+  MODE: "predict_w_labels"
   FIELDS: [
     'criteria',
   ]
   QUERY_REPR: "description"
   RELEVANT_LABELS: [ 1, 2 ]
   PATH_2_RUN: "../../reports/DoSSIER_5_easy"
-  PATH_2_QRELS: "../../data/raw/qrels_Judgment-of-0-is-non-relevant-1-is-excluded-and-2-is-eligible.txt"
+  PATH_2_QRELS: "../../data/raw/2022_qrels_Judgment-of-0-is-non-relevant-2-is-excluded-and-2-is-eligible.txt"
+  VERSION: 2022
 
+DoSSIER_mixed:
+  BATCH_SIZE: 256
+  N_SAMPLES: 50
+  MODEL_NAME: "bert-base-uncased"
+  MODEL_ALIAS: "crossencoder"
+  LOGGER_NAME: "crossencoder"
+  CHECKPOINT: "best-checkpoint-v6.ckpt"
+  GPUS: [ 0 ]
+  MODE: "predict_w_labels"
+  FIELDS: [
+    'criteria',
+  ]
+  QUERY_REPR: "description"
+  RELEVANT_LABELS: [ 1, 2 ]
+  PATH_2_RUN: "../../reports/easy_BIO"
+  PATH_2_QRELS: "../../data/raw/2022_qrels_Judgment-of-0-is-non-relevant-2-is-excluded-and-2-is-eligible.txt"
+
+only_difficult:
+  BATCH_SIZE: 256
+  N_SAMPLES: 50
+  MODEL_NAME: "bert-base-uncased"
+  MODEL_ALIAS: "crossencoder"
+  LOGGER_NAME: "crossencoder"
+  CHECKPOINT: "best-checkpoint-v5.ckpt"
+  GPUS: [ 0 ]
+  MODE: "predict_w_labels"
+  FIELDS: [
+    'criteria',
+  ]
+  QUERY_REPR: "description"
+  RELEVANT_LABELS: [ 2 ]
+  PATH_2_RUN: "../../reports/DoSSIER_2"
+  PATH_2_QRELS: "../../data/raw/2022_qrels_Judgment-of-0-is-non-relevant-2-is-excluded-and-2-is-eligible.txt"

@@ -2,14 +2,14 @@
 easy:
   SEED : 42
   TRAIN_BATCH_SIZE : 16
-  EVAL_BATCH_SIZE: 256
+  EVAL_BATCH_SIZE: 16
   N_TRAIN_SAMPLES: 8192
   N_VAL_SAMPLES: 50
   N_TEST_SAMPLES: 100
-  MODEL_NAME: "bert-base-uncased"
+  MODEL_NAME: bionlp/bluebert_pubmed_uncased_L-12_H-768_A-12
   WARMUP_STEPS: 0
-  MODEL_ALIAS: "crossencoder"
-  LOGGER_NAME: "crossencoder"
+  MODEL_ALIAS: "blue_crossencoder"
+  LOGGER_NAME: "blue_crossencoder"
   TRACK_METRIC: P@10
   PATIENCE: 3
   N_EPOCHS: 10
@@ -28,8 +28,65 @@ easy:
   PATH_2_QRELS: "../../data/raw/qrels_Judgment-of-0-is-non-relevant-1-is-excluded-and-2-is-eligible.txt"
   RELEVANT_LABELS: [1, 2]
   IRRELEVANT_LABELS: [0]
+  DATASET_VERSION: 2021
 
 difficult:
+  SEED: 42
+  TRAIN_BATCH_SIZE: 16
+  EVAL_BATCH_SIZE: 256
+  N_TRAIN_SAMPLES: 1024
+  N_VAL_SAMPLES: 150
+  N_TEST_SAMPLES: 100
+  MODEL_NAME: bionlp/bluebert_pubmed_uncased_L-12_H-768_A-12
+  WARMUP_STEPS: 0
+  MODEL_ALIAS: "blue_crossencoder"
+  LOGGER_NAME: "blue_crossencoder"
+  TRACK_METRIC: P@10
+  PATIENCE: 5
+  N_EPOCHS: 10
+  ACCUM_ITER: null
+  EVAL_EVERY_N_EPOCH: 1
+  GPUS: [0]
+  FIELDS: [
+    'criteria'
+  ]
+  QUERY_REPR: "description"
+  PATH_2_RUN: "../../reports/BM25p-fl-pnf-ckc-2021"
+  PATH_2_QRELS: "../../data/raw/qrels_Judgment-of-0-is-non-relevant-1-is-excluded-and-2-is-eligible.txt"
+  RELEVANT_LABELS: [2]
+  IRRELEVANT_LABELS: [1]
+  CHECKPOINT: "best-checkpoint.ckpt"
+  DATASET_VERSION: "2021"
+
+mixed:
+  SEED: 42
+  TRAIN_BATCH_SIZE: 16
+  EVAL_BATCH_SIZE: 256
+  N_TRAIN_SAMPLES: 1024
+  N_VAL_SAMPLES: null
+  N_TEST_SAMPLES: null
+  MODEL_NAME: "bert-base-uncased"
+  WARMUP_STEPS: 0
+  MODEL_ALIAS: "crossencoder"
+  LOGGER_NAME: "crossencoder"
+  TRACK_METRIC: P@10
+  PATIENCE: 5
+  N_EPOCHS: 10
+  ACCUM_ITER: null
+  EVAL_EVERY_N_EPOCH: 1
+  GPUS: [0]
+  FIELDS: [
+    'criteria'
+  ]
+  QUERY_REPR: "description"
+  PATH_2_RUN: "../../reports/DoSSIER_2"
+  PATH_2_QRELS: "../../data/raw/qrels_Judgment-of-0-is-non-relevant-1-is-excluded-and-2-is-eligible.txt"
+  RELEVANT_LABELS: [2]
+  IRRELEVANT_LABELS: [1]
+  CHECKPOINT: "best-checkpoint-v4.ckpt"
+  DATASET_VERSION: "2021"
+
+only_diff:
   SEED: 42
   TRAIN_BATCH_SIZE: 16
   EVAL_BATCH_SIZE: 256
@@ -44,16 +101,15 @@ difficult:
   PATIENCE: 5
   N_EPOCHS: 10
   ACCUM_ITER: null
-  EVAL_EVERY_N_EPOCH: 1º
+  EVAL_EVERY_N_EPOCH: 1
   GPUS: [0]
   FIELDS: [
     'criteria'
   ]
   QUERY_REPR: "description"
-  PATH_2_RUN: "../../reports/DoSSIER_1.txt"
-  PATH_2_QRELS: "../../data/raw/qrels_Judgment-of-0-is-non-relevant-1-is-excluded-and-2-is-eligible.txt"
+  PATH_2_RUN: "../../reports/DoSSIER_2"
+  PATH_2_QRELS: "../../data/raw/2022qrels_Judgment-of-0-is-non-relevant-1-is-excluded-and-2-is-eligible.txt"
   RELEVANT_LABELS: [2]
-  IRRELEVANT_LABELS: [1]
-  CHECKPOINT: "best-checkpoint-v4.ckpt"
-
-
+  IRRELEVANT_LABELS: [ 1, 0 ]
+  CHECKPOINT: "best-checkpoint-v5.ckpt"
+  DATASET_VERSION: "2021"

@@ -4,11 +4,13 @@ from trec_cds.models.crossencoder import CrossEncoder
 from trec_cds.data.ClinicalTrialsDataModule import ClinicalTrialsDataModule
 from pytorch_lightning.loggers import TensorBoardLogger
 import yaml
+from trec_cds.utils.evaluator import Evaluator
 
 
 if __name__ == "__main__":
+    config_name = "DoSSIER_5_difficult"
     with open("../../config/predict/config.yml") as f:
-        config = yaml.load(f, Loader=yaml.FullLoader)["DoSSIER_5_difficult"]  # name of the configuration
+        config = yaml.load(f, Loader=yaml.FullLoader)[config_name]  # name of the configuration
         config = DotMap(config)
 
     data_module = ClinicalTrialsDataModule(
@@ -20,14 +22,26 @@ if __name__ == "__main__":
         query_repr=config.QUERY_REPR,
         relevant_labels=config.RELEVANT_LABELS,
         path_to_run=config.PATH_2_RUN,
-        path_to_qrels=config.PATH_2_QRELS
+        path_to_qrels=config.PATH_2_QRELS,
+        dataset_version=config.VERSION
+    )
+
+    evaluator = Evaluator(
+        write_csv=True,
+        mode="predict",
+        output_path="../../reports/",
+        run_id=config_name,
+        re_rank=True,
+        config_name=config_name,
+        qrels_file=config.PATH_2_QRELS,
     )
 
     model = CrossEncoder.load_from_checkpoint(
         checkpoint_path=f"../../models/{config.MODEL_ALIAS}/checkpoints/{config.CHECKPOINT}",
         model_name=config.MODEL_NAME,
         num_labels=2,
-        mode="predict"
+        mode="predict",
+        evaluator=evaluator
     )
 
     logger = TensorBoardLogger(

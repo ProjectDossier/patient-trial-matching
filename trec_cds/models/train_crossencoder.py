@@ -5,11 +5,13 @@ from trec_cds.data.ClinicalTrialsDataModule import ClinicalTrialsDataModule
 from crossencoder import CrossEncoder
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 from pytorch_lightning.loggers import TensorBoardLogger
+from trec_cds.utils.evaluator import Evaluator
 
 
 if __name__ == "__main__":
+    config_name = "easy"
     with open("../../config/train/config.yml") as f:
-        config = yaml.load(f, Loader=yaml.FullLoader)["easy"]
+        config = yaml.load(f, Loader=yaml.FullLoader)[config_name]
         config = DotMap(config)
 
     data_module = ClinicalTrialsDataModule(
@@ -24,7 +26,18 @@ if __name__ == "__main__":
         relevant_labels=config.RELEVANT_LABELS,
         irrelevant_labels=config.IRRELEVANT_LABELS,
         path_to_run=config.PATH_2_RUN,
-        path_to_qrels=config.PATH_2_QRELS
+        path_to_qrels=config.PATH_2_QRELS,
+        dataset_version=config.DATASET_VERSION
+    )
+
+    evaluator = Evaluator(
+        write_csv=True,
+        mode="train",
+        output_path="../../reports/",
+        run_id=config_name,
+        re_rank=True,
+        config_name=config_name,
+        qrels_file=config.PATH_2_QRELS,
     )
 
     model = CrossEncoder(
@@ -33,7 +46,8 @@ if __name__ == "__main__":
         n_warmup_steps=config.WARMUP_STEPS,
         n_training_steps=data_module.n_training_steps,
         batch_size=config.TRAIN_BATCH_SIZE,
-        optimization_metric=config.TRACK_METRIC
+        optimization_metric=config.TRACK_METRIC,
+        evaluator=evaluator
     )
 
     checkpoint_callback = ModelCheckpoint(
