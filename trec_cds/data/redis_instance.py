@@ -77,7 +77,7 @@ class RedisInstance:
 
     def load_docs(
             self,
-            path: str
+            path: str = "../../data/interim/trials_parsed.jsonl"
     ):
         fields = []
         with open(path) as f:
@@ -277,13 +277,10 @@ class RedisInstance:
 
 if __name__ == "__main__":
 
-    version = "2022"
-    path_to_topics = f"../../data/interim/topics{version}.2.csv"
+    version = "2021"
 
     db_instance = RedisInstance(
-        path_to_topics=path_to_topics,
         version=version
     )
 
-    db_instance.load_topics(path_to_topics, version)
-    print()
+    db_instance.get_topics(['1'])

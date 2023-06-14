@@ -2,8 +2,10 @@ from os.path import exists
 import csv
 from typing import List, Union, Tuple, Any, Optional
 import ir_measures
+import numpy as np
 from ir_measures import *
 import pandas as pd
+from scipy.stats import ttest_rel
 
 
 def judgements_mapping(qrels, mode):
@@ -16,14 +18,15 @@ def judgements_mapping(qrels, mode):
 
 
 def read_run(
+        config_file: Optional[str] = None,
         config_name: str = "easy",
-        file_name: str = None,
-        sep: str = "\t",
+        file_name: Optional[str] = None,
+        sep: str = " ",
         bm25: bool = False):
 
     if file_name is None:
         import yaml
-        with open("../../config/train_config.yml") as f:
+        with open(config_file) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)[config_name]
         file_name = config["PATH_2_RUN"]
     if bm25:
@@ -66,9 +69,9 @@ class Evaluator:
         mode="train",
         output_path: str = "../../reports/",
         run_id: str = "DoSSIER_5_difficult",
-        re_rank: bool = False,
+        re_rank: bool = True,
         config_name: Optional[str] = None,
-        qrels_file: str = "qrels_Judgment-of-0-is-non-relevant-1-is-excluded-and-2-is-eligible.txt",
+        qrels_file: str = "../../data/raw/qrels_Judgment-of-0-is-non-relevant-1-is-excluded-and-2-is-eligible.txt",
         skip_Q0: bool = False,
         qrels_sep: str = " "
     ):
@@ -102,7 +105,7 @@ class Evaluator:
             qrels_fields.remove("Q0")
 
         qrels = pd.read_csv(
-            f"../../data/raw/{qrels_file}",
+            qrels_file,
             header=None,
             names=qrels_fields,
             sep=qrels_sep,
@@ -112,11 +115,17 @@ class Evaluator:
         qrels = qrels.rename(columns=self.columns_mappings)
 
         if re_rank:
-            self.bm25 = read_run(config_name=config_name, bm25=True)
+            self.bm25 = read_run(
+                config_file=f"../../config/{mode}/config.yml",
+                config_name=config_name,
+                bm25=True
+            )
 
         qrels_map = qrels.rename(
             columns=self.columns_mappings
             ).copy()
+
+        self.n_queries = len(qrels_map["query_id"].unique())
 
         if len(set(qrels_map.relevance.unique()).intersection({1, 2, 3})) == 3:
             qrels_map = judgements_mapping(qrels_map, "judgement_correction")
@@ -171,11 +180,13 @@ class Evaluator:
         if run_file is None:
             df_scores.sort_values(by=["query_id", "score"], ascending=False, inplace=True)
 
+        self.compare_ranked_lists(df_bm25_scores, df_agg_socres)
         if out_f_name in ["pred"]:
+
             if self.bm25 is not None:
-                self.write_run(df_agg_socres)
+                self.write_run(df_agg_socres, self.n_queries)
             else:
-                self.write_run(df_scores)
+                self.write_run(df_scores, self.n_queries)
 
         eval_summary = []
 
@@ -206,10 +217,10 @@ class Evaluator:
 
         return eval
 
-    def write_run(self, run):
+    def write_run(self, run, n_queries=50):
         run["Q0"] = "Q0"
         run["run_id"] = self.run_id
-        run["rank"] = list(range(1, 51)) * 50
+        run["rank"] = list(range(1, 51)) * n_queries
         run[
             [
                 "query_id",

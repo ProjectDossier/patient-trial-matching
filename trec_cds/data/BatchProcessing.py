@@ -21,7 +21,7 @@ class BatchProcessing:
         train_batch_size: int = 16,
         n_val_samples: Optional[int] = None,
         n_test_samples: Optional[int] = None,
-        dataset_version: Optional[str] = "2021",
+        dataset_version: Optional[str] = None,
     ):
 
         self.train_batch_size = train_batch_size
@@ -36,7 +36,10 @@ class BatchProcessing:
         self.irrelevant_labels = irrelevant_labels
         self.path_to_run = path_to_run
         self.path_to_qrels = path_to_qrels
-        self.dataset_version=dataset_version
+
+        if dataset_version is None:
+            dataset_version = "2021"
+        self.dataset_version = dataset_version
 
 
         random.seed(r_seed)
