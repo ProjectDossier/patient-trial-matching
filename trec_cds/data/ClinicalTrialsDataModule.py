@@ -11,15 +11,18 @@ class ClinicalTrialsDataModule(pl.LightningDataModule, ABC):
         model_name: str,
         fields: List[str],
         query_repr: str,
-        relevant_labels: List[int],
+
         path_to_run: str,
         path_to_qrels: str,
+        relevant_labels: List[int],
+        irrelevant_labels: Optional[List[int]] = None,
         train_batch_size: Optional[int] = None,
         eval_batch_size: Optional[int] = 16,
         n_train_samples: int = 1024,
         n_val_samples: Optional[int] = None,
         n_test_samples: Optional[int] = None,
-        mode: str = "train"
+        mode: str = "train",
+        dataset_version: Optional[str] = None,
     ):
         """
         :param train_batch_size: number of examples used on each training step
@@ -37,12 +40,15 @@ class ClinicalTrialsDataModule(pl.LightningDataModule, ABC):
             fields=fields,
             query_repr=query_repr,
             relevant_labels=relevant_labels,
+            irrelevant_labels=irrelevant_labels,
             train_batch_size=train_batch_size,
             n_val_samples=n_val_samples,
             n_test_samples=n_test_samples,
             mode=mode,
             tokenizer_name=model_name,
             path_to_run=path_to_run,
+            path_to_qrels=path_to_qrels,
+            dataset_version=dataset_version
             path_to_qrels=path_to_qrels
         )
 

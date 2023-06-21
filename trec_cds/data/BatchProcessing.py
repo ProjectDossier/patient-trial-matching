@@ -5,14 +5,16 @@ from typing import Dict, List, Optional
 from trec_cds.data.redis_instance import RedisInstance, MockupInstance
 import redis
 
+
 class BatchProcessing:
     def __init__(
         self,
         fields: List[str],
         query_repr: str,
-        relevant_labels: List[int],
         path_to_run: str,
         path_to_qrels: str,
+        relevant_labels: List[int],
+        irrelevant_labels: Optional[List[int]] = None,
         mode: str = "train",
         splits: Dict = {"train": 0.60, "val": 0.10, "test": 0.30},
         r_seed: int = 42,
@@ -20,6 +22,7 @@ class BatchProcessing:
         train_batch_size: int = 16,
         n_val_samples: Optional[int] = None,
         n_test_samples: Optional[int] = None,
+        dataset_version: Optional[str] = None,
     ):
 
         self.train_batch_size = train_batch_size
@@ -31,8 +34,14 @@ class BatchProcessing:
         self.fields = fields
         self.query_repr = query_repr
         self.relevant_labels = relevant_labels
+        self.irrelevant_labels = irrelevant_labels
         self.path_to_run = path_to_run
         self.path_to_qrels = path_to_qrels
+
+        if dataset_version is None:
+            dataset_version = "2021"
+        self.dataset_version = dataset_version
+
 
         random.seed(r_seed)
 
@@ -57,6 +66,7 @@ class BatchProcessing:
                 "run_id"
             ],
             converters={"qid": str},
+
             sep="\t"  # fixme: there was ' ' in some cases?
         )
 
@@ -83,6 +93,14 @@ class BatchProcessing:
             )
 
             self.reference_run = data.copy()
+
+            if self.irrelevant_labels is not None:
+                self.reference_run = self.reference_run[
+                    self.reference_run.label.isin(
+                        self.irrelevant_labels + self.relevant_labels
+                    )
+                ]
+
 
             data = data.fillna(0)
             if self.mode == "train":
@@ -137,6 +155,9 @@ class BatchProcessing:
         qids = [i[0] for i in sample_ids]
         unique_qids = list(set(qids))
         topics = self.db.get_topics(
+            qids=unique_qids,
+            version=self.dataset_version,
+            fields=[self.query_repr]
             unique_qids,
             [self.query_repr]
         )
@@ -187,7 +208,7 @@ class BatchProcessing:
         negatives = []
         for qid, docno in positives:
             negative_list = run[
-                                (run.qid == qid) & (run.label == 0)
+                                (run.qid == qid) & (run.label.isin(self.irrelevant_labels))
                                 ].docno.values.tolist()[0:100]
             random.shuffle(negative_list)
             negatives.append([qid, negative_list[0]])
