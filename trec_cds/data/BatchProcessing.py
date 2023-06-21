@@ -2,7 +2,8 @@ import pandas as pd
 import random
 from transformers import AutoTokenizer
 from typing import Dict, List, Optional
-from trec_cds.data.redis_instance import RedisInstance
+from trec_cds.data.redis_instance import RedisInstance, MockupInstance
+import redis
 
 
 class BatchProcessing:
@@ -44,7 +45,10 @@ class BatchProcessing:
 
         random.seed(r_seed)
 
-        self.db = RedisInstance()
+        try:
+            self.db = RedisInstance()
+        except redis.exceptions.ConnectionError:
+            self.db = MockupInstance()
 
         self.load_data()
 
@@ -62,7 +66,8 @@ class BatchProcessing:
                 "run_id"
             ],
             converters={"qid": str},
-            sep=" "
+
+            sep="\t"  # fixme: there was ' ' in some cases?
         )
 
         if self.mode != "predict_w_no_labels":
@@ -88,12 +93,14 @@ class BatchProcessing:
             )
 
             self.reference_run = data.copy()
+
             if self.irrelevant_labels is not None:
                 self.reference_run = self.reference_run[
                     self.reference_run.label.isin(
                         self.irrelevant_labels + self.relevant_labels
                     )
                 ]
+
 
             data = data.fillna(0)
             if self.mode == "train":
@@ -151,6 +158,8 @@ class BatchProcessing:
             qids=unique_qids,
             version=self.dataset_version,
             fields=[self.query_repr]
+            unique_qids,
+            [self.query_repr]
         )
 
         topics_dict = {}

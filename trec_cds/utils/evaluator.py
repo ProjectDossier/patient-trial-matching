@@ -77,6 +77,7 @@ class Evaluator:
     ):
 
         self.bm25 = None
+
         self.optimization_metric = optimization_metric
         self.output_path = output_path
         self.write_csv = write_csv
@@ -86,6 +87,7 @@ class Evaluator:
         self.csv_headers = ["epoch"] + [str(i) for i in self.metrics]
         self.run_id = run_id
 
+
         self.columns_mappings = {
             'qid': 'query_id',
             'docno': 'doc_id',
@@ -93,6 +95,7 @@ class Evaluator:
             'bm25_score': 'score',
             'agg_score': 'score'
         }
+
 
         qrels_fields = [
             "qid",
@@ -121,6 +124,7 @@ class Evaluator:
                 bm25=True
             )
 
+
         qrels_map = qrels.rename(
             columns=self.columns_mappings
             ).copy()
@@ -133,6 +137,7 @@ class Evaluator:
         self.evaluator_graded = ir_measures.evaluator(graded_metrics, qrels_map)
 
         qrels_map_non_graded = judgements_mapping(qrels_map, "binary_mapping")
+
 
         self.evaluator_non_graded = ir_measures.evaluator(non_graded_metrics, qrels_map_non_graded)
 
@@ -202,6 +207,7 @@ class Evaluator:
             eval = self.evaluator_graded.calc_aggregate(df_agg_socres)
             eval.update(self.evaluator_non_graded.calc_aggregate(df_agg_socres))
             eval_summary += [eval]
+
 
         optimization_metric = eval[ir_measures.parse_measure(self.optimization_metric)]
 

@@ -1,0 +1,34 @@
+---
+easy:
+  SEED : 42
+  TRAIN_BATCH_SIZE : 16
+  EVAL_BATCH_SIZE: 256
+  N_TRAIN_SAMPLES: 8192
+  N_VAL_SAMPLES: 100
+  N_TEST_SAMPLES: null
+  MODEL_NAME: "bert-base-uncased"
+  WARMUP_STEPS: 0
+  MODEL_ALIAS: "crossencoder"
+  LOGGER_NAME: "crossencoder"
+  TRACK_METRIC: P@10
+  PATIENCE: 5
+  N_EPOCHS: 10
+  ACCUM_ITER : null
+  EVAL_EVERY_N_EPOCH : 1
+  GPUS: [0]
+  FIELDS: [
+      'conditions',
+      'brief_title',
+      'official_title',
+      'brief_summary',
+      'detailed_description'
+  ]
+  QUERY_REPR: "description"
+  PATH_2_RUN: "../../reports/DoSSIER_1.txt"
+  PATH_2_QRELS: "../../data/raw/qrels_Judgment-of-0-is-non-relevant-1-is-excluded-and-2-is-eligible.txt"
+  RELEVANT_LABELS: [1, 2]
+
+difficult:
+  RELEVANT_LABELS: [2]
+
+

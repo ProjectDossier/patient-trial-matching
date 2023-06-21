@@ -11,6 +11,7 @@ class ClinicalTrialsDataModule(pl.LightningDataModule, ABC):
         model_name: str,
         fields: List[str],
         query_repr: str,
+
         path_to_run: str,
         path_to_qrels: str,
         relevant_labels: List[int],
@@ -48,6 +49,7 @@ class ClinicalTrialsDataModule(pl.LightningDataModule, ABC):
             path_to_run=path_to_run,
             path_to_qrels=path_to_qrels,
             dataset_version=dataset_version
+            path_to_qrels=path_to_qrels
         )
 
         if mode in ["train"]:

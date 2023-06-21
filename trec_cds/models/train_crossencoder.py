@@ -7,7 +7,6 @@ from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 from pytorch_lightning.loggers import TensorBoardLogger
 from trec_cds.utils.evaluator import Evaluator
 
-
 if __name__ == "__main__":
     config_name = "easy"
     with open("../../config/train/config.yml") as f:

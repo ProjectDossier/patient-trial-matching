@@ -275,6 +275,83 @@ class RedisInstance:
         return result
 
 
+from trec_cds.data.load_data_from_file import load_jsonl
+
+
+class MockupInstance:
+    def __init__(self):
+        trials_file = "/newstorage4/wkusa/data/trec_cds/trials_parsed-new.jsonl"
+        trials = load_jsonl(trials_file)
+
+        self.cts_dict = {ct['nct_id']: ct for ct in trials}
+
+        self.patients = []
+
+        # for patient_file in ['topics2021', 'topics2022']:
+        for patient_file in ['topics2021']:
+            infile = f"/home/wkusa/projects/TREC/trec-cds1/data/processed/{patient_file}.jsonl"
+            patients = load_jsonl(infile)
+            self.patients.extend(patients)
+
+        self.patients_dict = {str(p['patient_id']): p for p in self.patients}
+
+
+    def get_topics(
+        self,
+        qids: List[int],
+        fields: List[str] = [
+        "qid",
+        "query",
+        "keywords",
+        "gender",
+        "age"
+        ]
+    ):
+        result = []
+        for qid in qids:
+            patient = self.patients_dict[qid]
+
+            item = {}
+            for field in fields:
+                item.update({field: patient[field]})
+            result.append(item)
+
+        return result
+
+    def get_docs(
+            self,
+            docnos: List[str],
+            fields: List[str] = [
+                "nct_id",
+                'brief_title',
+                'official_title',
+                'brief_summary',
+                'detailed_description',
+                'study_type',
+                'criteria',
+                'gender',
+                'inclusion',
+                'exclusion',
+                'conditions',
+                'interventions',
+                'accepts_healthy_volunteers',
+                "minimum_age",
+                "maximum_age",
+            ]
+    ):
+        result = []
+        for docno in docnos:
+            ct = self.cts_dict[docno]
+
+            item = {}
+            for field in fields:
+
+                item.update({field: ct[field]})
+            result.append(item)
+
+        return result
+
+
 if __name__ == "__main__":
 
     version = "2021"
@@ -282,5 +359,3 @@ if __name__ == "__main__":
     db_instance = RedisInstance(
         version=version
     )
-
-    db_instance.get_topics(['1'])

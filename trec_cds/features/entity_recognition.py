@@ -7,9 +7,29 @@ from typing import List, Dict, Union
 import spacy
 from spacy import displacy
 
-from CTnlp.patient.parser import load_patients_from_xml
-from CTnlp.patient.patient import Patient
+from CTnlp.patient import load_patients_from_xml
+from CTnlp.patient import Patient
 from CTnlp.utils import Gender
+
+
+def normalise_smoking(current_medical_history:List[Dict[str, str]]):
+    for cmh in current_medical_history:
+        if cmh["text"] in ["smoking", 'smoke']:
+            if cmh["negated"]:
+                return False
+            else:
+                return True
+    return None
+
+def normalise_drinking(current_medical_history:List[Dict[str, str]]):
+    for cmh in current_medical_history:
+        if cmh["text"] == "alcohol":
+            if cmh["negated"]:
+                return False
+            else:
+                return True
+    return None
+
 
 
 def get_displacy_options(
