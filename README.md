@@ -1,7 +1,11 @@
-TREC-cds
+patient-trial-matching
 ==============================
 
-TU Wien @ TREC 2021 Clinical Trials Task
+This package serves as basis for the paper "Effective Matching of Patients to Clinical Trials using Entity Extraction and Neural Re-ranking"
+
+
+
+[![arXiv](https://img.shields.io/badge/arXiv-2307.00381-b31b1b.svg)](https://arxiv.org/abs/2307.00381)
 
 
 ## Installation
@@ -9,11 +13,11 @@ TU Wien @ TREC 2021 Clinical Trials Task
 Tested with `python=3.8`. Install requirements with:
 
 ```bash
-conda create --name TREC-cds python=3.8
+conda create --name patient-trial-matching python=3.8
 ```
 
 ```bash
-conda activate TREC-cds
+conda activate patient-trial-matching
 ```
 
 ```bash
@@ -33,12 +37,13 @@ redis-server
 
 ## Data
 
-Data from TREC-CDS is stored in `data/external` directory. It contains:
+Patients and clinical trials information can be downloaded from [TREC-CDS](http://trec-cds.org/2022.html) website:
 
 * `topics2021.xml` file with 75 patients' data
+* `topics2022.xml` file with 50 patients' data
 * 5 .zip files with ClinicalTrials data
 
-ClinicalTrials are stored with [git LFS](https://git-lfs.github.com) and after downloading should be extracted into `data/external/ClinicalTrials/` folder.
+ClinicalTrials should be extracted into `data/external/ClinicalTrials/` folder.
 
 
 ## Usage
@@ -56,106 +61,20 @@ $ python trec_cds/main.py
 - Postprocessing using topic and clinical trial related features
 - re-ranking using neural model and eligibility criteria
 
-## Text annotations for named entities
-
-Annotation schema 0.1.0
-
-- Age (Numerical)
-- Gender (M / F / O)
-- Disease
-- Chemical  (Drugs, etc.)
-- Dosage (relation with Chemical, also duration?)
-- Examination (CT / MR / etc.)
-- Examination results (relation with EXA)
-- Procedure (Surgery)
-- Symptom 
-- Ethnicity 
-
-others for consideration:
-
-- Healthiness ? ("healthy")
-- Date
-
-
-### Acronyms used in text
-
-- h/o - history of
-- S/P - Told Stimulant/Got Placebo
-- w/ - with
-- w/o - without
-- Pt - patient
-- Tx - treatment, therapy, ?transfer?
-- XRT - radiotherapy
-- CXR - chest X-ray
-- SOB - shortness of breath
-
-## Next steps
-
-- detection of negation and speculation.
-
-Project Organization
-------------
-
-    ├── LICENSE
-    ├── Makefile           <- Makefile with commands like `make data` or `make train`
-    ├── README.md          <- The top-level README for developers using this project.
-    ├── data
-    │   ├── external       <- Data from third party sources.
-    │   ├── interim        <- Intermediate data that has been transformed.
-    │   ├── processed      <- The final, canonical data sets for modeling.
-    │   └── raw            <- The original, immutable data dump.
-    │
-    ├── docs               <- A default Sphinx project; see sphinx-doc.org for details
-    │
-    ├── models             <- Trained and serialized models, model predictions, or model summaries
-    │
-    ├── notebooks          <- Jupyter notebooks. Naming convention is a number (for ordering),
-    │                         the creator's initials, and a short `-` delimited description, e.g.
-    │                         `1.0-jqp-initial-data-exploration`.
-    │
-    ├── references         <- Data dictionaries, manuals, and all other explanatory materials.
-    │
-    ├── reports            <- Generated analysis as HTML, PDF, LaTeX, etc.
-    │   └── figures        <- Generated graphics and figures to be used in reporting
-    │
-    ├── requirements.txt   <- The requirements file for reproducing the analysis environment, e.g.
-    │                         generated with `pip freeze > requirements.txt`
-    │
-    ├── setup.py           <- makes project pip installable (pip install -e .) so src can be imported
-    ├── src                <- Source code for use in this project.
-    │   ├── __init__.py    <- Makes src a Python module
-    │   │
-    │   ├── data           <- Scripts to download or generate data
-    │   │   └── make_dataset.py
-    │   │
-    │   ├── features       <- Scripts to turn raw data into features for modeling
-    │   │   └── build_features.py
-    │   │
-    │   ├── models         <- Scripts to train models and then use trained models to make
-    │   │   │                 predictions
-    │   │   ├── predict_model.py
-    │   │   └── train_model.py
-    │   │
-    │   └── visualization  <- Scripts to create exploratory and results oriented visualizations
-    │       └── visualize.py
-    │
-    └── tox.ini            <- tox file with settings for running tox; see tox.readthedocs.io
-
-
---------
-
-<p><small>Project based on the <a target="_blank" href="https://drivendata.github.io/cookiecutter-data-science/">cookiecutter data science project template</a>. #cookiecutterdatascience</small></p>
-
 
 ## Citing
 
 If you find our code useful, please cite our paper:
 
 ```bibtex
-@inproceedings{kusa2021dossier,
-  title={DOSSIER at TREC 2021 Clinical Trials Track},
-  author={Kusa, Wojciech and Ghafourian, Yasin},
-  year={2021},
-  booktitle={TREC}
+@article{Kusa2023Effective,
+title = {Effective matching of patients to clinical trials using entity extraction and neural re-ranking},
+journal = {Journal of Biomedical Informatics},
+pages = {104444},
+year = {2023},
+issn = {1532-0464},
+doi = {https://doi.org/10.1016/j.jbi.2023.104444},
+url = {https://www.sciencedirect.com/science/article/pii/S153204642300165X},
+author = {Wojciech Kusa and Óscar E. Mendoza and Petr Knoth and Gabriella Pasi and Allan Hanbury}
 }
 ```
