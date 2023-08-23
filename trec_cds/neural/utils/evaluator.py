@@ -17,11 +17,11 @@ def judgements_mapping(qrels, mode):
 
 
 def read_run(
-        config_file: Optional[str] = None,
-        config_name: str = "easy",
-        file_name: Optional[str] = None,
-        sep: str = " ",
-        bm25: bool = False,
+    config_file: Optional[str] = None,
+    config_name: str = "easy",
+    file_name: Optional[str] = None,
+    sep: str = " ",
+    bm25: bool = False,
 ):
     if file_name is None:
         import yaml
@@ -52,17 +52,17 @@ class Evaluator:
     """
 
     def __init__(
-            self,
-            optimization_metric=P @ 10,
-            write_csv: bool = True,
-            mode="train",
-            output_path: str = "../../reports/",
-            run_id: str = "DoSSIER_5_difficult",
-            re_rank: bool = True,
-            config_name: Optional[str] = None,
-            qrels_file: str = "../../data/raw/qrels_Judgment-of-0-is-non-relevant-1-is-excluded-and-2-is-eligible.txt",
-            skip_Q0: bool = False,
-            qrels_sep: str = " ",
+        self,
+        optimization_metric=P @ 10,
+        write_csv: bool = True,
+        mode="train",
+        output_path: str = "../../reports/",
+        run_id: str = "DoSSIER_5_difficult",
+        re_rank: bool = True,
+        config_name: Optional[str] = None,
+        qrels_file: str = "../../data/raw/qrels_Judgment-of-0-is-non-relevant-1-is-excluded-and-2-is-eligible.txt",
+        skip_Q0: bool = False,
+        qrels_sep: str = " ",
     ):
 
         self.bm25 = None
@@ -127,16 +127,16 @@ class Evaluator:
         )
 
     def __call__(
-            self,
-            examples: List[List[str]] = None,
-            run_file: str = None,
-            qids: List = None,
-            docnos: List[int] = None,
-            pred_scores=None,
-            epoch: int = -1,
-            save_report: bool = True,
-            out_f_name: str = "",
-            return_report: bool = False,
+        self,
+        examples: List[List[str]] = None,
+        run_file: str = None,
+        qids: List = None,
+        docnos: List[int] = None,
+        pred_scores=None,
+        epoch: int = -1,
+        save_report: bool = True,
+        out_f_name: str = "",
+        return_report: bool = False,
     ) -> Tuple[Any, List[List[Union[str, Any]]]]:
 
         output_path = self.output_path
@@ -152,7 +152,7 @@ class Evaluator:
             df_scores = df_scores.merge(self.bm25, on=["qid", "docno"], how="left")
 
             df_scores["agg_score"] = (df_scores["score"] * 0.7) + (
-                    df_scores["bm25_score"] * 0.3
+                df_scores["bm25_score"] * 0.3
             )
 
             df_bm25_scores = df_scores[["qid", "docno", "bm25_score"]].copy()
@@ -174,7 +174,6 @@ class Evaluator:
                 by=["query_id", "score"], ascending=False, inplace=True
             )
 
-        self.compare_ranked_lists(df_bm25_scores, df_agg_socres)
         if out_f_name in ["pred"]:
 
             if self.bm25 is not None:
