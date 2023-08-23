@@ -24,6 +24,7 @@ conda activate patient-trial-matching
 $ pip install -r requirements.txt
 $ git submodule update --init --recursive
 $ pip install -e clinical-trials 
+$ pip install spacy==3.1.6   # this will raise a warning, but it is needed for the models to properly load
 ```
 
 This will install all required packages and also this project in a devel mode.

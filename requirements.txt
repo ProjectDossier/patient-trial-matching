@@ -7,13 +7,12 @@ flake8
 python-dotenv>=0.5.1
 
 pandas~=1.3.1
-spacy==3.1.6
 scispacy==0.4.0
 https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.4.0/en_core_sci_scibert-0.4.0.tar.gz
 https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.4.0/en_ner_bc5cdr_md-0.4.0.tar.gz
 https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.4.0/en_core_sci_sm-0.4.0.tar.gz
 https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.4.0/en_core_sci_lg-0.4.0.tar.gz
-huggingface_hub==0.4.0
+# huggingface_hub==0.4.0
 setuptools~=52.0.0
 numpy~=1.20.3
 tqdm~=4.64.0
@@ -27,3 +26,4 @@ redis[hiredis]==4.3.5
 pytorch_lightning==1.7.2
 dotmap==1.3.30
 ir-measures==0.3.1
+torchmetrics==0.11.4
