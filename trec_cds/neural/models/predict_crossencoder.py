@@ -1,16 +1,18 @@
-from dotmap import DotMap
 import pytorch_lightning as pl
-from trec_cds.neural.models.crossencoder import CrossEncoder
-from trec_cds.neural.data.ClinicalTrialsDataModule import ClinicalTrialsDataModule
-from pytorch_lightning.loggers import TensorBoardLogger
 import yaml
-from trec_cds.neural.utils.evaluator import Evaluator
+from dotmap import DotMap
+from pytorch_lightning.loggers import TensorBoardLogger
 
+from trec_cds.neural.data.ClinicalTrialsDataModule import ClinicalTrialsDataModule
+from trec_cds.neural.models.crossencoder import CrossEncoder
+from trec_cds.neural.utils.evaluator import Evaluator
 
 if __name__ == "__main__":
     config_name = "DoSSIER_5_difficult"
     with open("../../config/predict/config.yml") as f:
-        config = yaml.load(f, Loader=yaml.FullLoader)[config_name]  # name of the configuration
+        config = yaml.load(f, Loader=yaml.FullLoader)[
+            config_name
+        ]  # name of the configuration
         config = DotMap(config)
 
     data_module = ClinicalTrialsDataModule(
@@ -23,7 +25,7 @@ if __name__ == "__main__":
         relevant_labels=config.RELEVANT_LABELS,
         path_to_run=config.PATH_2_RUN,
         path_to_qrels=config.PATH_2_QRELS,
-        dataset_version=config.VERSION
+        dataset_version=config.VERSION,
     )
 
     evaluator = Evaluator(
@@ -41,20 +43,14 @@ if __name__ == "__main__":
         model_name=config.MODEL_NAME,
         num_labels=2,
         mode="predict",
-        evaluator=evaluator
+        evaluator=evaluator,
     )
 
     logger = TensorBoardLogger(
         save_dir=f"../../reports/{config.MODEL_ALIAS}_pred_logs",
-        name=config.LOGGER_NAME
+        name=config.LOGGER_NAME,
     )
 
-    trainer = pl.Trainer(
-        logger=logger,
-        gpus=config.GPUS
-    )
+    trainer = pl.Trainer(logger=logger, gpus=config.GPUS)
 
-    trainer.predict(
-        model=model,
-        dataloaders=data_module.predict_dataloader()
-    )
+    trainer.predict(model=model, dataloaders=data_module.predict_dataloader())

@@ -1,7 +1,9 @@
 from abc import ABC
 from typing import Optional, List
+
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
+
 from trec_cds.neural.data.BatchProcessing import BatchProcessing
 
 
@@ -11,7 +13,6 @@ class ClinicalTrialsDataModule(pl.LightningDataModule, ABC):
         model_name: str,
         fields: List[str],
         query_repr: str,
-
         path_to_run: str,
         path_to_qrels: str,
         relevant_labels: List[int],
@@ -48,7 +49,7 @@ class ClinicalTrialsDataModule(pl.LightningDataModule, ABC):
             tokenizer_name=model_name,
             path_to_run=path_to_run,
             path_to_qrels=path_to_qrels,
-            dataset_version=dataset_version
+            dataset_version=dataset_version,
         )
 
         if mode in ["train"]:
@@ -85,7 +86,7 @@ class ClinicalTrialsDataModule(pl.LightningDataModule, ABC):
         return DataLoader(
             self.data_val,
             batch_size=self.eval_batch_size,
-            collate_fn=self.eval_batch_processing
+            collate_fn=self.eval_batch_processing,
         )
 
     def test_dataloader(self):

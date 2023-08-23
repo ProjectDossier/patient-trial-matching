@@ -1,12 +1,12 @@
 import pytorch_lightning as pl
 import yaml
 from dotmap import DotMap
-from trec_cds.neural.data.ClinicalTrialsDataModule import ClinicalTrialsDataModule
-from crossencoder import CrossEncoder
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 from pytorch_lightning.loggers import TensorBoardLogger
-from trec_cds.neural.utils.evaluator import Evaluator
 
+from crossencoder import CrossEncoder
+from trec_cds.neural.data.ClinicalTrialsDataModule import ClinicalTrialsDataModule
+from trec_cds.neural.utils.evaluator import Evaluator
 
 if __name__ == "__main__":
     config_name = "easy"
@@ -27,7 +27,7 @@ if __name__ == "__main__":
         irrelevant_labels=config.IRRELEVANT_LABELS,
         path_to_run=config.PATH_2_RUN,
         path_to_qrels=config.PATH_2_QRELS,
-        dataset_version=config.DATASET_VERSION
+        dataset_version=config.DATASET_VERSION,
     )
 
     evaluator = Evaluator(
@@ -47,7 +47,7 @@ if __name__ == "__main__":
         n_training_steps=data_module.n_training_steps,
         batch_size=config.TRAIN_BATCH_SIZE,
         optimization_metric=config.TRACK_METRIC,
-        evaluator=evaluator
+        evaluator=evaluator,
     )
 
     checkpoint_callback = ModelCheckpoint(
@@ -61,32 +61,22 @@ if __name__ == "__main__":
 
     logger = TensorBoardLogger(
         save_dir=f"../../reports/{config.MODEL_ALIAS}_train_logs",
-        name=config.LOGGER_NAME
+        name=config.LOGGER_NAME,
     )
 
     early_stopping_callback = EarlyStopping(
-        monitor=config.TRACK_METRIC,
-        patience=config.PATIENCE,
-        mode="max"
+        monitor=config.TRACK_METRIC, patience=config.PATIENCE, mode="max"
     )
 
     trainer = pl.Trainer(
         logger=logger,
-        callbacks=[
-            early_stopping_callback,
-            checkpoint_callback
-        ],
+        callbacks=[early_stopping_callback, checkpoint_callback],
         max_epochs=config.N_EPOCHS,
         gpus=config.GPUS,
         accumulate_grad_batches=config.ACCUM_ITER,
-        check_val_every_n_epoch=config.EVAL_EVERY_N_EPOCH
+        check_val_every_n_epoch=config.EVAL_EVERY_N_EPOCH,
     )
 
-    trainer.fit(
-        model=model,
-        datamodule=data_module
-    )
+    trainer.fit(model=model, datamodule=data_module)
 
-    trainer.test(
-        dataloaders=data_module.test_dataloader()
-    )
+    trainer.test(dataloaders=data_module.test_dataloader())
