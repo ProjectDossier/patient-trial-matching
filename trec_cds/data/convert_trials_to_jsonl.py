@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 from CTnlp.clinical_trial import ClinicalTrial
 from CTnlp.parsers import parse_clinical_trials_from_folder
-from trec_cds.features.drug_disease_extraction import EntityExtraction
+from trec_cds.lexical.features.drug_disease_extraction import EntityExtraction
 
 
 def convert_trials_to_jsonl(trials: List[ClinicalTrial], outfile: str) -> None:

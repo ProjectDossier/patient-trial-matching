@@ -4,8 +4,8 @@ from typing import List
 
 from CTnlp.patient import Patient
 from CTnlp.patient import load_patients_from_xml
-from trec_cds.features.drug_disease_extraction import EntityExtraction
-from trec_cds.features.entity_recognition import (
+from trec_cds.lexical.features.drug_disease_extraction import EntityExtraction
+from trec_cds.lexical.features.entity_recognition import (
     EntityRecognition,
     normalise_smoking,
     normalise_drinking,
