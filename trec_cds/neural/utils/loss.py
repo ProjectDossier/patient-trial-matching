@@ -3,7 +3,6 @@ from torch import nn
 
 
 class PairwiseHingLoss(nn.Module):
-
     def __init__(self):
         super(PairwiseHingLoss, self).__init__()
 
