@@ -24,6 +24,7 @@ class ClinicalTrialsDataModule(pl.LightningDataModule, ABC):
         n_test_samples: Optional[int] = None,
         mode: str = "train",
         dataset_version: Optional[str] = None,
+        path_to_trials_jsonl: Optional[str] = None,
     ):
         """
         :param train_batch_size: number of examples used on each training step
@@ -50,6 +51,7 @@ class ClinicalTrialsDataModule(pl.LightningDataModule, ABC):
             path_to_run=path_to_run,
             path_to_qrels=path_to_qrels,
             dataset_version=dataset_version,
+            path_to_trials_jsonl=path_to_trials_jsonl,
         )
 
         if mode in ["train"]:

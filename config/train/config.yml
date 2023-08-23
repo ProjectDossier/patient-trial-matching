@@ -24,8 +24,9 @@ easy:
       'detailed_description'
   ]
   QUERY_REPR: "description"
-  PATH_2_RUN: "../../reports/BM25p-fl-pnf-ckc-2021"
-  PATH_2_QRELS: "../../data/raw/qrels_Judgment-of-0-is-non-relevant-1-is-excluded-and-2-is-eligible.txt"
+  PATH_2_RUN: "../../data/submissions/bm25_postprocessed_2021"
+  PATH_2_QRELS: "../../data/raw/qrels2021.txt"
+  PATH_2_TRIALS: "../../data/processed/trials_parsed.jsonl"
   RELEVANT_LABELS: [1, 2]
   IRRELEVANT_LABELS: [0]
   DATASET_VERSION: 2021
@@ -51,8 +52,9 @@ difficult:
     'criteria'
   ]
   QUERY_REPR: "description"
-  PATH_2_RUN: "../../reports/BM25p-fl-pnf-ckc-2021"
-  PATH_2_QRELS: "../../data/raw/qrels_Judgment-of-0-is-non-relevant-1-is-excluded-and-2-is-eligible.txt"
+  PATH_2_RUN: "../../data/submissions/bm25_postprocessed_2021"
+  PATH_2_QRELS: "../../data/raw/qrels2021.txt"
+  PATH_2_TRIALS: "../../data/processed/trials_parsed.jsonl"
   RELEVANT_LABELS: [2]
   IRRELEVANT_LABELS: [1]
   CHECKPOINT: "best-checkpoint.ckpt"
@@ -79,8 +81,9 @@ mixed:
     'criteria'
   ]
   QUERY_REPR: "description"
-  PATH_2_RUN: "../../reports/DoSSIER_2"
-  PATH_2_QRELS: "../../data/raw/qrels_Judgment-of-0-is-non-relevant-1-is-excluded-and-2-is-eligible.txt"
+  PATH_2_RUN: "../../data/submissions/bm25_postprocessed_2021"
+  PATH_2_QRELS: "../../data/raw/qrels2021.txt"
+  PATH_2_TRIALS: "../../data/processed/trials_parsed.jsonl"
   RELEVANT_LABELS: [2]
   IRRELEVANT_LABELS: [1]
   CHECKPOINT: "best-checkpoint-v4.ckpt"
@@ -107,8 +110,9 @@ only_diff:
     'criteria'
   ]
   QUERY_REPR: "description"
-  PATH_2_RUN: "../../reports/DoSSIER_2"
-  PATH_2_QRELS: "../../data/raw/2022qrels_Judgment-of-0-is-non-relevant-1-is-excluded-and-2-is-eligible.txt"
+  PATH_2_RUN: "../../data/submissions/bm25_postprocessed_2021"
+  PATH_2_QRELS: "../../data/raw/qrels2021.txt"
+  PATH_2_TRIALS: "../../data/processed/trials_parsed.jsonl"
   RELEVANT_LABELS: [2]
   IRRELEVANT_LABELS: [ 1, 0 ]
   CHECKPOINT: "best-checkpoint-v5.ckpt"

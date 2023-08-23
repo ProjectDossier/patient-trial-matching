@@ -25,7 +25,7 @@ class BatchProcessing:
         n_val_samples: Optional[int] = None,
         n_test_samples: Optional[int] = None,
         dataset_version: Optional[str] = None,
-        parsed_trials_jsonl: Optional[str] = None,
+        path_to_trials_jsonl: Optional[str] = None,
     ):
 
         self.train_batch_size = train_batch_size
@@ -51,7 +51,7 @@ class BatchProcessing:
             self.db = RedisInstance()
         except redis.exceptions.ConnectionError:
             self.db = MockupInstance(
-                parsed_trials_jsonl=parsed_trials_jsonl, version=self.dataset_version
+                parsed_trials_jsonl=path_to_trials_jsonl, version=self.dataset_version
             )
 
         self.load_data()

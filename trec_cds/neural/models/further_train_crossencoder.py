@@ -29,6 +29,7 @@ if __name__ == "__main__":
         irrelevant_labels=config.IRRELEVANT_LABELS,
         path_to_run=config.PATH_2_RUN,
         path_to_qrels=config.PATH_2_QRELS,
+        path_to_trials_jsonl=config.PATH_2_TRIALS,
     )
 
     evaluator = Evaluator(

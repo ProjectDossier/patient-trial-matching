@@ -1,18 +1,21 @@
 import json
-from tqdm import tqdm
-from redis import StrictRedis
 from typing import Union, Optional, List
-from numpy import nan
+
 import pandas as pd
+from numpy import nan
+from redis import StrictRedis
+from tqdm import tqdm
+
+from trec_cds.data.load_data_from_file import load_jsonl
 
 
 class RedisInstance:
     def __init__(
-            self,
-            id: Union[str, int] = 1,
-            path_to_collection: Optional[str] = None,
-            path_to_topics: Optional[str] = None,
-            version: Optional[str] = "2021"
+        self,
+        id: Union[str, int] = 1,
+        path_to_collection: Optional[str] = None,
+        path_to_topics: Optional[str] = None,
+        version: Optional[str] = "2021",
     ):
 
         self.redis_db = StrictRedis(
@@ -28,36 +31,29 @@ class RedisInstance:
         )
 
         self.str_fields = [
-            'org_study_id',
-            'brief_title',
-            'official_title',
-            'brief_summary',
-            'detailed_description',
-            'study_type',
-            'criteria',
-            'gender'
+            "org_study_id",
+            "brief_title",
+            "official_title",
+            "brief_summary",
+            "detailed_description",
+            "study_type",
+            "criteria",
+            "gender",
         ]
 
         self.list_fields = [
-            'inclusion',
-            'exclusion',
-            'primary_outcomes',
-            'secondary_outcomes',
-            'conditions',
+            "inclusion",
+            "exclusion",
+            "primary_outcomes",
+            "secondary_outcomes",
+            "conditions",
         ]
 
-        self.dict_fields = [
-            'interventions'
-        ]
+        self.dict_fields = ["interventions"]
 
-        self.bool_fields = [
-            'accepts_healthy_volunteers'
-        ]
+        self.bool_fields = ["accepts_healthy_volunteers"]
 
-        self.float_fields = [
-            "minimum_age",
-            "maximum_age"
-        ]
+        self.float_fields = ["minimum_age", "maximum_age"]
 
         try:
             self.get_docs(["NCT00000107"])
@@ -75,10 +71,7 @@ class RedisInstance:
     def delete_intances(self):
         self.redis_db.flushall()
 
-    def load_docs(
-            self,
-            path: str = "../../data/interim/trials_parsed.jsonl"
-    ):
+    def load_docs(self, path: str = "../../data/interim/trials_parsed.jsonl"):
         fields = []
         with open(path) as f:
             for line in tqdm(f):
@@ -108,48 +101,40 @@ class RedisInstance:
                     elif field in self.bool_fields:
                         doc[field] = str(doc[field])
 
-                    insert.update(
-                        {
-                            f"doc:{docno}:{field}": doc[field]
-                        }
-                    )
+                    insert.update({f"doc:{docno}:{field}": doc[field]})
 
                 self.redis_db.mset(insert)
 
-    def get_docs(
-            self,
-            docnos: List[str],
-            fields: List[str] = [
+    def get_docs(self, docnos: List[str], fields: List[str] = None):
+        if fields is None:
+            fields = [
                 "nct_id",
-                'brief_title',
-                'official_title',
-                'brief_summary',
-                'detailed_description',
-                'study_type',
-                'criteria',
-                'gender',
-                'inclusion',
-                'exclusion',
-                'conditions',
-                'interventions',
-                'accepts_healthy_volunteers',
+                "brief_title",
+                "official_title",
+                "brief_summary",
+                "detailed_description",
+                "study_type",
+                "criteria",
+                "gender",
+                "inclusion",
+                "exclusion",
+                "conditions",
+                "interventions",
+                "accepts_healthy_volunteers",
                 "minimum_age",
                 "maximum_age",
             ]
-    ):
         n_fields = len(fields)
 
-        keys = [
-            f"doc:{docno}:{field}"
-            for docno in docnos
-            for field in fields
-        ]
+        keys = [f"doc:{docno}:{field}" for docno in docnos for field in fields]
 
         data = self.redis_db.mget(keys)
 
-        data = [data[i: i + n_fields] for i in range(0, len(data), n_fields)]
+        data = [data[i : i + n_fields] for i in range(0, len(data), n_fields)]
 
-        assert len([i[0] for i in data if all(i is None for j in i)]) == 0, "some id does not exists in db"
+        assert (
+            len([i[0] for i in data if all(i is None for j in i)]) == 0
+        ), "some id does not exists in db"
 
         result = []
         for values in data:
@@ -177,19 +162,16 @@ class RedisInstance:
 
         return result
 
-    def load_topics(
-            self,
-            path: str,
-            version: str,
-            fields: List[str] = [
+    def load_topics(self, path: str, version: str, fields: List[str] = None):
+        if fields is None:
+            fields = [
                 "qid",
                 "query",
                 "keywords",
                 "description",
                 "gender",
-                "age"
+                "age",
             ]
-    ):
         topics = pd.read_csv(path)
 
         for idx, topic in tqdm(topics.iterrows()):
@@ -198,41 +180,32 @@ class RedisInstance:
             insert = {}
 
             for field in fields:
-                insert.update(
-                    {
-                        f"topic:{version}{qid}:{field}": str(topic[field])
-                    }
-                )
+                insert.update({f"topic:{version}{qid}:{field}": str(topic[field])})
 
             self.redis_db.mset(insert)
 
-    def get_topics(
-            self,
-            qids: List[int],
-            version: str,
-            fields: List[str] = [
+    def get_topics(self, qids: List[int], version: str, fields: List[str] = None):
+
+        if fields is None:
+            fields = [
                 "qid",
                 "query",
                 "description",
                 "keywords",
                 "gender",
-                "age"
+                "age",
             ]
-    ):
-
         n_fields = len(fields)
 
-        keys = [
-            f"topic:{version}{qid}:{field}"
-            for qid in qids
-            for field in fields
-        ]
+        keys = [f"topic:{version}{qid}:{field}" for qid in qids for field in fields]
 
         data = self.redis_db.mget(keys)
 
-        data = [data[i: i + n_fields] for i in range(0, len(data), n_fields)]
+        data = [data[i : i + n_fields] for i in range(0, len(data), n_fields)]
 
-        assert len([i[0] for i in data if i[0] is None]) == 0, "some id does not exists in db"
+        assert (
+            len([i[0] for i in data if i[0] is None]) == 0
+        ), "some id does not exists in db"
 
         result = []
         for values in data:
@@ -245,108 +218,98 @@ class RedisInstance:
         return result
 
     def filter_run(self, qid: List[int], docno: List[int]):
-        patient = self.get_topics(
-            qids=[qid],
-            fields=["age", "gender"]
-        )[0]
+        patient = self.get_topics(qids=[qid], fields=["age", "gender"])[0]
         trial = self.get_docs(
-            docnos=[docno],
-            fields=[
-                'gender',
-                "minimum_age",
-                "maximum_age"
-            ]
+            docnos=[docno], fields=["gender", "minimum_age", "maximum_age"]
         )[0]
 
         trial["gender"] = "A" if trial["gender"] is None else trial["gender"]
-        trial["minimum_age"] = -1 if trial["minimum_age"] is None else trial["minimum_age"]
-        trial["maximum_age"] = 100 if trial["maximum_age"] is None else trial["maximum_age"]
-
-        result = (
-                (
-                        patient["gender"] == trial["gender"]
-                        or
-                        trial["gender"] not in ["F", "M"]
-                )
-                and
-                trial["minimum_age"] <= patient["age"] <= trial["maximum_age"]
+        trial["minimum_age"] = (
+            -1 if trial["minimum_age"] is None else trial["minimum_age"]
+        )
+        trial["maximum_age"] = (
+            100 if trial["maximum_age"] is None else trial["maximum_age"]
         )
 
+        result = (
+            patient["gender"] == trial["gender"] or trial["gender"] not in ["F", "M"]
+        ) and trial["minimum_age"] <= patient["age"] <= trial["maximum_age"]
+
         return result
-
-
-from trec_cds.data.load_data_from_file import load_jsonl
 
 
 class MockupInstance:
     """Mockup instance for situations where Redis is not available."""
-    def __init__(self, parsed_trials_jsonl: Optional[str]):
-        trials_file = "/newstorage4/wkusa/data/trec_cds/trials_parsed-new.jsonl"
+
+    def __init__(
+        self,
+        parsed_trials_jsonl: Optional[str] = None,
+        path_to_topics: Optional[str] = None,
+        version: Optional[int] = 2021,
+    ):
+        if parsed_trials_jsonl is None:
+            trials_file = "../../data/processed/trials_parsed.jsonl"
+        else:
+            trials_file = parsed_trials_jsonl
         trials = load_jsonl(trials_file)
 
-        self.cts_dict = {ct['nct_id']: ct for ct in trials}
+        self.cts_dict = {ct["nct_id"]: ct for ct in trials}
 
         self.patients = []
-
+        if path_to_topics is None:
+            path_to_topics = "../../data/processed/topics2021.jsonl"
+        patients = load_jsonl(path_to_topics)
+        self.patients.extend(patients)
         # for patient_file in ['topics2021', 'topics2022']:
-        for patient_file in ['topics2021']:
-            infile = f"/home/wkusa/projects/TREC/trec-cds1/data/processed/{patient_file}.jsonl"
-            patients = load_jsonl(infile)
-            self.patients.extend(patients)
+        # for patient_file in ["topics2021"]:
+        #     infile = f"/home/wkusa/projects/TREC/trec-cds1/data/processed/{patient_file}.jsonl"
+        #     patients = load_jsonl(infile)
+        #     self.patients.extend(patients)
 
-        self.patients_dict = {str(p['patient_id']): p for p in self.patients}
-
+        self.patients_dicts = {}
+        self.patients_dicts[version] = {str(p["patient_id"]): p for p in self.patients}
 
     def get_topics(
-        self,
-        qids: List[int],
-        fields: List[str] = [
-        "qid",
-        "query",
-        "keywords",
-        "gender",
-        "age"
-        ]
+        self, qids: List[int], fields: List[str] = None, version: int = 2021
     ):
+        patients_dict = self.patients_dicts[version]
+
+        if fields is None:
+            fields = ["qid", "query", "keywords", "gender", "age"]
         result = []
         for qid in qids:
-            patient = self.patients_dict[qid]
+            patient = patients_dict[qid]
 
-            item = {}
-            for field in fields:
-                item.update({field: patient[field]})
+            item = {field: patient[field] for field in fields}
             result.append(item)
 
         return result
 
-    def get_docs(
-            self,
-            docnos: List[str],
-            fields: List[str] = [
+    def get_docs(self, docnos: List[str], fields: List[str] = None):
+        if fields is None:
+            fields = [
                 "nct_id",
-                'brief_title',
-                'official_title',
-                'brief_summary',
-                'detailed_description',
-                'study_type',
-                'criteria',
-                'gender',
-                'inclusion',
-                'exclusion',
-                'conditions',
-                'interventions',
-                'accepts_healthy_volunteers',
+                "brief_title",
+                "official_title",
+                "brief_summary",
+                "detailed_description",
+                "study_type",
+                "criteria",
+                "gender",
+                "inclusion",
+                "exclusion",
+                "conditions",
+                "interventions",
+                "accepts_healthy_volunteers",
                 "minimum_age",
                 "maximum_age",
             ]
-    ):
         result = []
         for docno in docnos:
             ct = self.cts_dict[docno]
 
             item = {}
             for field in fields:
-
                 item.update({field: ct[field]})
             result.append(item)
 
@@ -354,9 +317,6 @@ class MockupInstance:
 
 
 if __name__ == "__main__":
-
     version = "2021"
 
-    db_instance = RedisInstance(
-        version=version
-    )
+    db_instance = RedisInstance(version=version)
