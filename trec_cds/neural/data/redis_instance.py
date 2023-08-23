@@ -279,7 +279,8 @@ from trec_cds.data.load_data_from_file import load_jsonl
 
 
 class MockupInstance:
-    def __init__(self):
+    """Mockup instance for situations where Redis is not available."""
+    def __init__(self, parsed_trials_jsonl: Optional[str]):
         trials_file = "/newstorage4/wkusa/data/trec_cds/trials_parsed-new.jsonl"
         trials = load_jsonl(trials_file)
 

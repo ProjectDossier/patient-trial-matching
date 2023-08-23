@@ -1,17 +1,17 @@
-from dotmap import DotMap
 import pytorch_lightning as pl
-from trec_cds.models.crossencoder import CrossEncoder
-from trec_cds.data.ClinicalTrialsDataModule import ClinicalTrialsDataModule
-from pytorch_lightning.loggers import TensorBoardLogger
-from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 import yaml
-from trec_cds.utils.evaluator import Evaluator
+from dotmap import DotMap
+from trec_cds.neural.data.ClinicalTrialsDataModule import ClinicalTrialsDataModule
+from crossencoder import CrossEncoder
+from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
+from pytorch_lightning.loggers import TensorBoardLogger
+from trec_cds.neural.utils.evaluator import Evaluator
 
 
 if __name__ == "__main__":
-    config_name = "difficult"
+    config_name = "easy"
     with open("../../config/train/config.yml") as f:
-        config = yaml.load(f, Loader=yaml.FullLoader)[config_name]  # name of the configuration
+        config = yaml.load(f, Loader=yaml.FullLoader)[config_name]
         config = DotMap(config)
 
     data_module = ClinicalTrialsDataModule(
@@ -26,7 +26,8 @@ if __name__ == "__main__":
         relevant_labels=config.RELEVANT_LABELS,
         irrelevant_labels=config.IRRELEVANT_LABELS,
         path_to_run=config.PATH_2_RUN,
-        path_to_qrels=config.PATH_2_QRELS
+        path_to_qrels=config.PATH_2_QRELS,
+        dataset_version=config.DATASET_VERSION
     )
 
     evaluator = Evaluator(
@@ -39,8 +40,7 @@ if __name__ == "__main__":
         qrels_file=config.PATH_2_QRELS,
     )
 
-    model = CrossEncoder.load_from_checkpoint(
-        checkpoint_path=f"../../models/{config.MODEL_ALIAS}/checkpoints/{config.CHECKPOINT}",
+    model = CrossEncoder(
         model_name=config.MODEL_NAME,
         num_labels=2,
         n_warmup_steps=config.WARMUP_STEPS,
@@ -50,11 +50,6 @@ if __name__ == "__main__":
         evaluator=evaluator
     )
 
-    logger = TensorBoardLogger(
-        save_dir=f"../../reports/{config.MODEL_ALIAS}_pred_logs",
-        name=config.LOGGER_NAME
-    )
-
     checkpoint_callback = ModelCheckpoint(
         dirpath=f"../../models/{config.MODEL_ALIAS}/checkpoints",
         filename="best-checkpoint",
@@ -62,6 +57,11 @@ if __name__ == "__main__":
         verbose=True,
         monitor=config.TRACK_METRIC,
         mode="max",
+    )
+
+    logger = TensorBoardLogger(
+        save_dir=f"../../reports/{config.MODEL_ALIAS}_train_logs",
+        name=config.LOGGER_NAME
     )
 
     early_stopping_callback = EarlyStopping(

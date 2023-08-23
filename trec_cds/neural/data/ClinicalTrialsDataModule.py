@@ -2,7 +2,7 @@ from abc import ABC
 from typing import Optional, List
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
-from .BatchProcessing import BatchProcessing
+from trec_cds.neural.data.BatchProcessing import BatchProcessing
 
 
 class ClinicalTrialsDataModule(pl.LightningDataModule, ABC):
@@ -49,7 +49,6 @@ class ClinicalTrialsDataModule(pl.LightningDataModule, ABC):
             path_to_run=path_to_run,
             path_to_qrels=path_to_qrels,
             dataset_version=dataset_version
-            path_to_qrels=path_to_qrels
         )
 
         if mode in ["train"]:

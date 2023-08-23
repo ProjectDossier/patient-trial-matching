@@ -2,7 +2,7 @@ import pandas as pd
 import random
 from transformers import AutoTokenizer
 from typing import Dict, List, Optional
-from trec_cds.data.redis_instance import RedisInstance, MockupInstance
+from trec_cds.neural.data.redis_instance import RedisInstance, MockupInstance
 import redis
 
 
@@ -23,6 +23,7 @@ class BatchProcessing:
         n_val_samples: Optional[int] = None,
         n_test_samples: Optional[int] = None,
         dataset_version: Optional[str] = None,
+        parsed_trials_jsonl: Optional[str] = None,
     ):
 
         self.train_batch_size = train_batch_size
@@ -48,7 +49,7 @@ class BatchProcessing:
         try:
             self.db = RedisInstance()
         except redis.exceptions.ConnectionError:
-            self.db = MockupInstance()
+            self.db = MockupInstance(parsed_trials_jsonl=parsed_trials_jsonl)
 
         self.load_data()
 
@@ -158,8 +159,6 @@ class BatchProcessing:
             qids=unique_qids,
             version=self.dataset_version,
             fields=[self.query_repr]
-            unique_qids,
-            [self.query_repr]
         )
 
         topics_dict = {}

@@ -1,10 +1,10 @@
 from dotmap import DotMap
 import pytorch_lightning as pl
-from trec_cds.models.crossencoder import CrossEncoder
-from trec_cds.data.ClinicalTrialsDataModule import ClinicalTrialsDataModule
+from trec_cds.neural.models.crossencoder import CrossEncoder
+from trec_cds.neural.data.ClinicalTrialsDataModule import ClinicalTrialsDataModule
 from pytorch_lightning.loggers import TensorBoardLogger
 import yaml
-from trec_cds.utils.evaluator import Evaluator
+from trec_cds.neural.utils.evaluator import Evaluator
 
 
 if __name__ == "__main__":

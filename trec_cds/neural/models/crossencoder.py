@@ -1,10 +1,10 @@
 from abc import ABC
 import numpy as np
 import pytorch_lightning as pl
-from trec_cds.utils.evaluator import Evaluator
+from trec_cds.neural.utils.evaluator import Evaluator
 from torch import nn, split
 from transformers import AdamW, AutoConfig, AutoModel, get_linear_schedule_with_warmup
-from trec_cds.utils.loss import PairwiseHingLoss
+from trec_cds.neural.utils.loss import PairwiseHingLoss
 from ir_measures import *
 import ir_measures
 
