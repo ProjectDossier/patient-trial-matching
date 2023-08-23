@@ -27,6 +27,12 @@ $ pip install -e clinical-trials
 $ pip install spacy==3.1.6   # this will raise a warning, but it is needed for the models to properly load
 ```
 
+To download qrels run:
+
+```bash
+$ python download_qrels.py
+```
+
 This will install all required packages and also this project in a devel mode.
 
 

@@ -18,7 +18,7 @@ easy_BIO:
   QUERY_REPR: "description"
   RELEVANT_LABELS: [1, 2]
   PATH_2_RUN: "../../reports/DoSSIER_2"
-  PATH_2_QRELS: "../../data/raw/2022_qrels_Judgment-of-0-is-non-relevant-2-is-excluded-and-2-is-eligible.txt"
+  PATH_2_QRELS: "../../data/external/qrels2022.txt.txt"
   PATH_2_TRIALS: "../../data/processed/trials_parsed.jsonl"
 
 DoSSIER_5_easy:
@@ -40,7 +40,7 @@ DoSSIER_5_easy:
   QUERY_REPR: "description"
   RELEVANT_LABELS: [1, 2]
   PATH_2_RUN: "../../reports/DoSSIER_2"
-  PATH_2_QRELS: "../../data/raw/2022_qrels_Judgment-of-0-is-non-relevant-2-is-excluded-and-2-is-eligible.txt"
+  PATH_2_QRELS: "../../data/external/qrels2022.txt.txt"
   PATH_2_TRIALS: "../../data/processed/trials_parsed.jsonl"
   VERSION: 2022
 
@@ -59,7 +59,7 @@ DoSSIER_5_difficult:
   QUERY_REPR: "description"
   RELEVANT_LABELS: [ 1, 2 ]
   PATH_2_RUN: "../../reports/DoSSIER_5_easy"
-  PATH_2_QRELS: "../../data/raw/2022_qrels_Judgment-of-0-is-non-relevant-2-is-excluded-and-2-is-eligible.txt"
+  PATH_2_QRELS: "../../data/external/qrels2022.txt.txt"
   PATH_2_TRIALS: "../../data/processed/trials_parsed.jsonl"
   VERSION: 2022
 
@@ -78,7 +78,7 @@ DoSSIER_mixed:
   QUERY_REPR: "description"
   RELEVANT_LABELS: [ 1, 2 ]
   PATH_2_RUN: "../../reports/easy_BIO"
-  PATH_2_QRELS: "../../data/raw/2022_qrels_Judgment-of-0-is-non-relevant-2-is-excluded-and-2-is-eligible.txt"
+  PATH_2_QRELS: "../../data/external/qrels2022.txt.txt"
   PATH_2_TRIALS: "../../data/processed/trials_parsed.jsonl"
 
 only_difficult:
@@ -96,5 +96,5 @@ only_difficult:
   QUERY_REPR: "description"
   RELEVANT_LABELS: [ 2 ]
   PATH_2_RUN: "../../reports/DoSSIER_2"
-  PATH_2_QRELS: "../../data/raw/2022_qrels_Judgment-of-0-is-non-relevant-2-is-excluded-and-2-is-eligible.txt"
+  PATH_2_QRELS: "../../data/external/qrels2022.txt.txt"
   PATH_2_TRIALS: "../../data/processed/trials_parsed.jsonl"

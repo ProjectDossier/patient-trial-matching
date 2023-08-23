@@ -25,7 +25,7 @@ easy:
   ]
   QUERY_REPR: "description"
   PATH_2_RUN: "../../data/submissions/bm25_postprocessed_2021"
-  PATH_2_QRELS: "../../data/raw/qrels2021.txt"
+  PATH_2_QRELS: "../../data/external/qrels2021.txt"
   PATH_2_TRIALS: "../../data/processed/trials_parsed.jsonl"
   RELEVANT_LABELS: [1, 2]
   IRRELEVANT_LABELS: [0]
@@ -53,7 +53,7 @@ difficult:
   ]
   QUERY_REPR: "description"
   PATH_2_RUN: "../../data/submissions/bm25_postprocessed_2021"
-  PATH_2_QRELS: "../../data/raw/qrels2021.txt"
+  PATH_2_QRELS: "../../data/external/qrels2021.txt"
   PATH_2_TRIALS: "../../data/processed/trials_parsed.jsonl"
   RELEVANT_LABELS: [2]
   IRRELEVANT_LABELS: [1]
@@ -82,7 +82,7 @@ mixed:
   ]
   QUERY_REPR: "description"
   PATH_2_RUN: "../../data/submissions/bm25_postprocessed_2021"
-  PATH_2_QRELS: "../../data/raw/qrels2021.txt"
+  PATH_2_QRELS: "../../data/external/qrels2021.txt"
   PATH_2_TRIALS: "../../data/processed/trials_parsed.jsonl"
   RELEVANT_LABELS: [2]
   IRRELEVANT_LABELS: [1]
@@ -111,7 +111,7 @@ only_diff:
   ]
   QUERY_REPR: "description"
   PATH_2_RUN: "../../data/submissions/bm25_postprocessed_2021"
-  PATH_2_QRELS: "../../data/raw/qrels2021.txt"
+  PATH_2_QRELS: "../../data/external/qrels2021.txt"
   PATH_2_TRIALS: "../../data/processed/trials_parsed.jsonl"
   RELEVANT_LABELS: [2]
   IRRELEVANT_LABELS: [ 1, 0 ]
