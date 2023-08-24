@@ -1,10 +1,18 @@
-patient-trial-matching
+Matching Patients to Clinical Trials 🩺
 ==============================
 
-This package serves as basis for the paper "Effective Matching of Patients to Clinical Trials using Entity Extraction
-and Neural Re-ranking"
+This package serves as basis for the paper: _"Effective Matching of Patients to Clinical Trials using Entity Extraction
+and Neural Re-ranking"_ by Wojciech Kusa, Óscar E. Mendoza, Petr Knoth, Gabriella Pasi, Allan Hanbury
 
-[![arXiv](https://img.shields.io/badge/arXiv-2307.00381-b31b1b.svg)](https://arxiv.org/abs/2307.00381)
+[![DOI:10.1016/j.jbi.2023.104444](http://img.shields.io/badge/Journal_of_Biomedical_Informatics-10.1016/j.jbi.2023.104444-EF7C1A.svg)](https://doi.org/10.1016/j.jbi.2023.104444) [![arXiv](https://img.shields.io/badge/arXiv-2307.00381-b31b1b.svg)](https://arxiv.org/abs/2307.00381)
+
+Enhancing patient recruitment for clinical trials is often hampered by the complexity of matching patient descriptions
+with trial eligibility criteria. This repository presents a novel approach to facilitating this process. By employing a
+two-stage model, we first use a data enrichment technique to boost disease and drug mentions in both queries and trial
+documents. Subsequently, a novel re-ranking method employing a BERT-based neural model is adapted specifically for this
+task, drawing on the structure of trial documents. Our method has shown to significantly improve the precision in
+retrieving relevant clinical trials by 15%. Explore our code and findings to gain insights into our approach and its
+implications for clinical trial matching.
 
 ### Table of contents
 
