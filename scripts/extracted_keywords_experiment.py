@@ -112,7 +112,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--return_top_n",
-        default=500,
+        default=1000,
         type=int,
         help="return top n results from retrieval model",
     )

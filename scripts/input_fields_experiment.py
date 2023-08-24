@@ -44,13 +44,13 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--first_n",
-        default=25000,
+        default=500000,
         type=int,
         help="load only first n clinical trial documents (max is ~370k)",
     )
     parser.add_argument(
         "--return_top_n",
-        default=500,
+        default=1000,
         type=int,
         help="return top n results from retrieval model",
     )
