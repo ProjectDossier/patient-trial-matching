@@ -10,27 +10,28 @@ This package serves as basis for the paper "Effective Matching of Patients to Cl
 
 ## Installation
 
-Tested with `python=3.8`. Install requirements with:
+Tested with `python=3.8`. Assuming you have conda installed, create new environment with:
 
 ```bash
 conda create --name patient-trial-matching python=3.8
 ```
 
+Activate the environment:
+
 ```bash
 conda activate patient-trial-matching
 ```
+
+Install requirements:
 
 ```bash
 $ pip install -r requirements.txt
 $ git submodule update --init --recursive
 $ pip install -e clinical-trials 
 $ pip install spacy==3.1.6   # this will raise a warning, but it is needed for the models to properly load
-```
-
-To download qrels run:
-
-```bash
-$ python download_qrels.py
+$ pip install medspacy==0.2.0.0
+$ pip install medspacy==0.2.0.1 
+$ pip install pydantic==1.10.11 
 ```
 
 This will install all required packages and also this project in a devel mode.
@@ -40,6 +41,7 @@ This will install all required packages and also this project in a devel mode.
 ```bash
 redis-server
 ```
+If your system does not support redis, the code will use the mockup version of the redis server.
 
 
 ## Data
@@ -49,6 +51,13 @@ Patients and clinical trials information can be downloaded from [TREC-CDS](http:
 * `topics2021.xml` file with 75 patients' data
 * `topics2022.xml` file with 50 patients' data
 * 5 .zip files with ClinicalTrials data
+
+
+To download qrels and NER model for detecting age and gender run:
+
+```bash
+$ python prepare_data.py
+```
 
 ClinicalTrials should be extracted into `data/external/ClinicalTrials/` folder.
 
