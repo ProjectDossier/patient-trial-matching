@@ -1,8 +1,8 @@
 from trec_cds.data.load_data_from_file import load_jsonl
-from trec_cds.features.build_features import ClinicalTrialsFeatures
+from trec_cds.lexical.features.build_features import ClinicalTrialsFeatures
 import datetime
-from trec_cds.features.index_clinical_trials import Indexer
-from trec_cds.models.trec_evaluation import load_qrels, print_line, read_bm25
+from trec_cds.lexical.features.index_clinical_trials import Indexer
+from trec_cds.trec_evaluation import load_qrels, print_line, read_bm25
 import pytrec_eval
 from typing import List
 from tqdm import tqdm

@@ -1,20 +1,17 @@
 import argparse
 import copy
 import datetime
-import json
 import logging
 import os
 from typing import List, Dict, Any
 
 import pandas as pd
+import pyterrier as pt
 from tqdm import tqdm
 
 from trec_cds.data.load_data_from_file import load_jsonl
-from trec_cds.features.build_features import ClinicalTrialsFeatures
-from trec_cds.features.index_clinical_trials import Indexer
-from trec_cds.models.trec_evaluation import read_bm25, evaluate
-
-import pyterrier as pt
+from trec_cds.lexical.features.build_features import ClinicalTrialsFeatures
+from trec_cds.trec_evaluation import read_bm25, evaluate
 
 if not pt.started():
     pt.init()
@@ -36,7 +33,7 @@ AFFIRMATIVE_ENTITIES = "affirmative"
 
 
 def get_sections(
-    entities_dict: Dict[str, Dict[str, str]], options: List[str]
+        entities_dict: Dict[str, Dict[str, str]], options: List[str]
 ) -> List[str]:
     new_terms: List[str] = []
     for prefix, entity_key in {
@@ -71,7 +68,7 @@ def build_query(patient: Dict[str, Any], options: List[str]) -> List[str]:
 
 
 def swap_exclusion(
-    exclusion_dict: Dict[str, Dict[str, str]]
+        exclusion_dict: Dict[str, Dict[str, str]]
 ) -> Dict[str, Dict[str, str]]:
     out_dict = copy.deepcopy(exclusion_dict)
     for key in out_dict.keys():
@@ -193,9 +190,11 @@ if __name__ == "__main__":
             for ct in clinical_trials_text
         ]
 
+
         def ct_iter():
             for x, _ct_text in zip(trials, cts_tokenized):
                 yield {"docno": x["nct_id"], "text": _ct_text}
+
 
         doc_iter = ct_iter()
 

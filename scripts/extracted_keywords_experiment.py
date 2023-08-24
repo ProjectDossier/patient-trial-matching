@@ -8,9 +8,9 @@ from typing import List, Dict, Any
 from tqdm import tqdm
 
 from trec_cds.data.load_data_from_file import load_jsonl
-from trec_cds.features.build_features import ClinicalTrialsFeatures
-from trec_cds.features.index_clinical_trials import Indexer
-from trec_cds.models.trec_evaluation import read_bm25, evaluate
+from trec_cds.lexical.features.build_features import ClinicalTrialsFeatures
+from trec_cds.lexical.features.index_clinical_trials import Indexer
+from trec_cds.trec_evaluation import read_bm25, evaluate
 
 feature_builder = ClinicalTrialsFeatures(spacy_language_model_name="en_core_sci_lg")
 
@@ -22,17 +22,25 @@ NEGATIVE_ENTITIES = "negative"
 AFFIRMATIVE_ENTITIES = "affirmative"
 
 
-def get_sections(entities_dict:Dict[str, Dict[str, str]], options:List[str]) -> List[str]:
+def get_sections(
+    entities_dict: Dict[str, Dict[str, str]], options: List[str]
+) -> List[str]:
     new_terms: List[str] = []
-    for prefix, entity_key in {"cmh": "cmh_entities", "pmh": "pmh_entities", "fh": "fh_entities"}.items():
+    for prefix, entity_key in {
+        "cmh": "cmh_entities",
+        "pmh": "pmh_entities",
+        "fh": "fh_entities",
+    }.items():
         for entity in entities_dict[entity_key]:
             if prefix not in options:
                 continue
 
-            if entity['negated']:
+            if entity["negated"]:
                 if NEGATIVE_ENTITIES not in options:
                     continue
-                new_terms.append(f'no_{prefix}_{"_".join(entity["text"].strip().split())}')
+                new_terms.append(
+                    f'no_{prefix}_{"_".join(entity["text"].strip().split())}'
+                )
             else:
                 if AFFIRMATIVE_ENTITIES not in options:
                     continue
@@ -41,7 +49,7 @@ def get_sections(entities_dict:Dict[str, Dict[str, str]], options:List[str]) -> 
     return new_terms
 
 
-def build_query(patient: Dict[str, Any], options: List[str])-> List[str]:
+def build_query(patient: Dict[str, Any], options: List[str]) -> List[str]:
     sections = get_sections(patient, options=options)
     text = feature_builder.preprocess_text(patient["description"], lemmatised=False)
     # text = feature_builder.preprocess_text(patient['current_medical_history'], lemmatised=True)
@@ -49,19 +57,25 @@ def build_query(patient: Dict[str, Any], options: List[str])-> List[str]:
     return text
 
 
-def swap_exclusion(exclusion_dict: Dict[str, Dict[str, str]]) -> Dict[str, Dict[str, str]]:
+def swap_exclusion(
+    exclusion_dict: Dict[str, Dict[str, str]]
+) -> Dict[str, Dict[str, str]]:
     out_dict = copy.deepcopy(exclusion_dict)
     for key in out_dict.keys():
         for entity_id in range(len(out_dict[key])):
-            out_dict[key][entity_id]["negated"] = not out_dict[key][entity_id]["negated"]
+            out_dict[key][entity_id]["negated"] = not out_dict[key][entity_id][
+                "negated"
+            ]
     return out_dict
 
 
-def build_index_input(clinical_trial: Dict[str, Any], options:List[str]) -> List[str]:
+def build_index_input(clinical_trial: Dict[str, Any], options: List[str]) -> List[str]:
     exclusion_dict = swap_exclusion(exclusion_dict=clinical_trial["exclusion_criteria"])
     exclusion_sections = get_sections(exclusion_dict, options=options)
 
-    inclusion_sections = get_sections(clinical_trial["inclusion_criteria"], options=options)
+    inclusion_sections = get_sections(
+        clinical_trial["inclusion_criteria"], options=options
+    )
     input_text = f"{clinical_trial['brief_summary']} {clinical_trial['official_title']} {clinical_trial['brief_title']} {clinical_trial['detailed_description']} {' '.join(clinical_trial['conditions'])}  {' '.join(clinical_trial['inclusion'])}"
     # input_text = f"{clinical_trial['brief_summary']} {clinical_trial['official_title']} {clinical_trial['brief_title']} {clinical_trial['detailed_description']} {' '.join(clinical_trial['conditions'])}  {clinical_trial['criteria']}"
     text = feature_builder.preprocess_text(input_text, lemmatised=False)
