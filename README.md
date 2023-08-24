@@ -3,35 +3,38 @@ patient-trial-matching
 
 This package serves as basis for the paper "Effective Matching of Patients to Clinical Trials using Entity Extraction and Neural Re-ranking"
 
-
-
 [![arXiv](https://img.shields.io/badge/arXiv-2307.00381-b31b1b.svg)](https://arxiv.org/abs/2307.00381)
 
+### Table of contents
+1. [Installation](#installation)
+3. [Data](#data)
+2. [Usage](#usage)
 
-## Installation
+
+## <a name='installation' />  1. Installation
 
 Tested with `python=3.8`. Assuming you have conda installed, create new environment with:
 
 ```bash
-conda create --name patient-trial-matching python=3.8
+$ conda create --name patient-trial-matching python=3.8
 ```
 
 Activate the environment:
 
 ```bash
-conda activate patient-trial-matching
+$ conda activate patient-trial-matching
 ```
 
 Install requirements:
 
 ```bash
-$ pip install -r requirements.txt
-$ git submodule update --init --recursive
-$ pip install -e clinical-trials 
-$ pip install spacy==3.1.6   # this will raise a warning, but it is needed for the models to properly load
-$ pip install medspacy==0.2.0.0
-$ pip install medspacy==0.2.0.1 
-$ pip install pydantic==1.10.11 
+(patient-trial-matching)$ pip install -r requirements.txt
+(patient-trial-matching)$ git submodule update --init --recursive
+(patient-trial-matching)$ pip install -e clinical-trials 
+(patient-trial-matching)$ pip install spacy==3.1.6   # this will raise a warning, but it is needed for the models to properly load
+(patient-trial-matching)$ pip install medspacy==0.2.0.0
+(patient-trial-matching)$ pip install medspacy==0.2.0.1 
+(patient-trial-matching)$ pip install pydantic==1.10.11 
 ```
 
 This will install all required packages and also this project in a devel mode.
@@ -44,7 +47,7 @@ redis-server
 If your system does not support redis, the code will use the mockup version of the redis server.
 
 
-## Data
+## <a name='data' /> 2. Data
 
 Patients and clinical trials information can be downloaded from [TREC-CDS](http://trec-cds.org/2022.html) website:
 
@@ -56,19 +59,35 @@ Patients and clinical trials information can be downloaded from [TREC-CDS](http:
 To download qrels and NER model for detecting age and gender run:
 
 ```bash
-$ python prepare_data.py
+(patient-trial-matching)$ python prepare_data.py
 ```
 
 ClinicalTrials should be extracted into `data/external/ClinicalTrials/` folder.
 
 
-## Usage
+## <a name='usage' /> 3. Usage
 
-You can test installation by running:
+### 3.1 Data preprocessing
+
+Prepare patients' data. It will prepare 2 files: `topics2021.jsonl` and `topics2022.jsonl` in output_folder folder.
 
 ```bash
-$ python trec_cds/main.py
+(patient-trial-matching)$ python trec_cds/data/convert_trials_to_jsonl.py --input_folder PATH_TO_PATIENT_XML_DATA --output_folder PATH_TO_OUTPUT_FOLDER
 ```
+
+Prepare trials' data. This might take several hours (5-10 hours) as the entity extraction model is making predictions for each trial.
+
+```bash
+(patient-trial-matching)$ python trec_cds/data/convert_trials_to_jsonl.py --input_data PATH_TO_UNZIPPED_XML_DATA --outfile P
+```
+
+### 3.2 Lexical matching
+
+
+
+
+
+
 
 ### Features
 
@@ -78,7 +97,7 @@ $ python trec_cds/main.py
 - re-ranking using neural model and eligibility criteria
 
 
-## Citing
+## 4. Citing
 
 If you find our code useful, please cite our paper:
 
