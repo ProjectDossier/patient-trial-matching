@@ -8,7 +8,7 @@ from torch import nn, split
 from transformers import AdamW, AutoConfig, AutoModel, get_linear_schedule_with_warmup
 
 from trec_cds.neural.utils.evaluator import Evaluator
-from trec_cds.neural.utils.loss import PairwiseHingLoss
+from trec_cds.neural.utils.loss import PairwiseHingeLoss
 
 
 class CrossEncoder(pl.LightningModule, ABC):
@@ -43,7 +43,7 @@ class CrossEncoder(pl.LightningModule, ABC):
 
         self.linear = nn.Linear(self.out_size, num_labels - 1)
 
-        self.criterion = self.criterion = PairwiseHingLoss()
+        self.criterion = self.criterion = PairwiseHingeLoss()
         self.sigmoid = nn.Sigmoid()
         self.softmax = nn.Softmax(dim=1)
 
