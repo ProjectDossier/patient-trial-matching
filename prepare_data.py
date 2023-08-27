@@ -14,4 +14,9 @@ if __name__ == "__main__":
     os.system("rm models/NER_model.zip")
 
     # download sample submission
-    os.system("wget https://owncloud.tuwien.ac.at/index.php/s/dFLy0DkHWhfJWCP/download -nc -O data/submissions/bm25_postprocessed_2021")
+    os.system(
+        "wget https://owncloud.tuwien.ac.at/index.php/s/dFLy0DkHWhfJWCP/download -nc -O data/submissions/bm25_postprocessed_2021"
+    )
+    os.system(
+        "wget https://owncloud.tuwien.ac.at/index.php/s/kt4M8t7Uag0O2Id/download -nc -O data/submissions/bm25_postprocessed_2022"
+    )
