@@ -49,7 +49,7 @@ class BatchProcessing:
 
         try:
             self.db = RedisInstance()
-        except redis.exceptions.ConnectionError:
+        except (redis.exceptions.ConnectionError, redis.exceptions.TimeoutError):
             self.db = MockupInstance(
                 parsed_trials_jsonl=path_to_trials_jsonl, version=self.dataset_version
             )
