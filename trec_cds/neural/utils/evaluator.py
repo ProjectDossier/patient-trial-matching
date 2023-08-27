@@ -60,6 +60,7 @@ class Evaluator:
         run_id: str = "DoSSIER_5_difficult",
         re_rank: bool = True,
         config_name: Optional[str] = None,
+        path_to_base_run: Optional[str] = None,
         qrels_file: str = "../../data/raw/qrels_Judgment-of-0-is-non-relevant-1-is-excluded-and-2-is-eligible.txt",
         skip_Q0: bool = False,
         qrels_sep: str = " ",
@@ -108,6 +109,7 @@ class Evaluator:
             self.bm25 = read_run(
                 config_file=f"../../config/{mode}/config.yml",
                 config_name=config_name,
+                file_name=path_to_base_run,
                 bm25=True,
             )
 
