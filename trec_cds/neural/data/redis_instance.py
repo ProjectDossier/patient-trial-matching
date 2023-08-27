@@ -257,7 +257,7 @@ class MockupInstance:
 
         self.patients = load_jsonl(path_to_patients)
         self.patients_dicts = {
-            version: {str(p["patient_id"]): p for p in self.patients}
+            dataset_version: {str(p["patient_id"]): p for p in self.patients}
         }
         self.dataset_version = dataset_version
 
