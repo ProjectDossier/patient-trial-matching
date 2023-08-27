@@ -17,5 +17,5 @@ easy:
   ]
   QUERY_REPR: "description"
   RELEVANT_LABELS: [1, 2]
-  PATH_2_RUN: "../../reports/DoSSIER_1.txt"
-  PATH_2_QRELS: "../../data/external/qrels2022.txt"
+  PATH_TO_RUN: "../../reports/DoSSIER_1.txt"
+  PATH_TO_QRELS: "../../data/external/qrels2022.txt"

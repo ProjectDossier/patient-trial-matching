@@ -24,8 +24,8 @@ easy:
       'detailed_description'
   ]
   QUERY_REPR: "description"
-  PATH_2_RUN: "../../reports/DoSSIER_1.txt"
-  PATH_2_QRELS: "../../data/external/qrels2021.txt"
+  PATH_TO_RUN: "../../reports/DoSSIER_1.txt"
+  PATH_TO_QRELS: "../../data/external/qrels2021.txt"
   RELEVANT_LABELS: [1, 2]
 
 difficult:
