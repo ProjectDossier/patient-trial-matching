@@ -43,7 +43,7 @@ class CrossEncoder(pl.LightningModule, ABC):
 
         self.linear = nn.Linear(self.out_size, num_labels - 1)
 
-        self.criterion = self.criterion = PairwiseHingeLoss()
+        self.criterion = PairwiseHingeLoss()
         self.sigmoid = nn.Sigmoid()
         self.softmax = nn.Softmax(dim=1)
 

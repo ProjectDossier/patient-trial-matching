@@ -25,9 +25,10 @@ if __name__ == "__main__":
         query_repr=config.QUERY_REPR,
         relevant_labels=config.RELEVANT_LABELS,
         irrelevant_labels=config.IRRELEVANT_LABELS,
-        path_to_run=config.PATH_2_RUN,
-        path_to_qrels=config.PATH_2_QRELS,
-        path_to_trials_jsonl=config.PATH_2_TRIALS,
+        path_to_run=config.PATH_TO_RUN,
+        path_to_qrels=config.PATH_TO_QRELS,
+        path_to_trials_jsonl=config.PATH_TO_TRIALS,
+        path_to_patients=config.PATH_TO_PATIENTS,
         dataset_version=config.DATASET_VERSION,
     )
 
@@ -38,7 +39,7 @@ if __name__ == "__main__":
         run_id=config_name,
         re_rank=True,
         config_name=config_name,
-        qrels_file=config.PATH_2_QRELS,
+        qrels_file=config.PATH_TO_QRELS,
     )
 
     model = CrossEncoder(

@@ -243,31 +243,23 @@ class MockupInstance:
 
     def __init__(
         self,
-        parsed_trials_jsonl: Optional[str] = None,
-        path_to_topics: Optional[str] = None,
-        version: Optional[int] = 2021,
+        parsed_trials_jsonl: str,
+        path_to_patients: str,
+        dataset_version: str,
     ):
-        if parsed_trials_jsonl is None:
-            trials_file = "../../data/processed/trials_parsed.jsonl"
-        else:
-            trials_file = parsed_trials_jsonl
-        trials = load_jsonl(trials_file)
-
+        trials = load_jsonl(parsed_trials_jsonl)
         self.cts_dict = {ct["nct_id"]: ct for ct in trials}
 
-        self.patients = []
-        if path_to_topics is None:
-            path_to_topics = "../../data/processed/topics2021.jsonl"
-        patients = load_jsonl(path_to_topics)
-        self.patients.extend(patients)
-        # for patient_file in ['topics2021', 'topics2022']:
-        # for patient_file in ["topics2021"]:
-        #     infile = f"/home/wkusa/projects/TREC/trec-cds1/data/processed/{patient_file}.jsonl"
-        #     patients = load_jsonl(infile)
-        #     self.patients.extend(patients)
+        if path_to_patients is None:
+            raise ValueError(
+                "path_to_patients must be provided. It must be a jsonl file."
+            )
 
-        self.patients_dicts = {}
-        self.patients_dicts[version] = {str(p["patient_id"]): p for p in self.patients}
+        self.patients = load_jsonl(path_to_patients)
+        self.patients_dicts = {
+            version: {str(p["patient_id"]): p for p in self.patients}
+        }
+        self.dataset_version = dataset_version
 
     def get_topics(
         self, qids: List[int], fields: List[str] = None, version: int = 2021

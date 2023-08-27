@@ -28,7 +28,7 @@ def read_run(
 
         with open(config_file) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)[config_name]
-        file_name = config["PATH_2_RUN"]
+        file_name = config["PATH_TO_RUN"]
     if bm25:
         score_field = "bm25_score"
     else:
