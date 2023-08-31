@@ -33,7 +33,7 @@ class ClinicalTrialsDataModule(pl.LightningDataModule, ABC):
         :param n_train_samples: for restricting the number of samples used per epoch
         :param n_val_samples: for restricting the validation to the top n results of each run
         :param n_test_samples: for restricting the evaluation to the top n results of each run
-        :param mode: values["train", "predict_w_labels", "pred_w_no_labels"] required to
+        :param mode: values["train", "predict_w_labels", "predict_w_no_labels"] required to
         define which kind of process the data module is used for.
         """
 
@@ -73,7 +73,7 @@ class ClinicalTrialsDataModule(pl.LightningDataModule, ABC):
             self.train_batch_processing = batch_processing.build_train_batch
             self.eval_batch_processing = batch_processing.build_batch
 
-        elif mode in ["predict_w_labels", "pred_w_no_labels"]:
+        elif mode in ["predict_w_labels", "predict_w_no_labels"]:
             self.data_test = batch_processing.data
             self.pred_batch_size = eval_batch_size
             self.pred_batch_processing = batch_processing.build_batch
