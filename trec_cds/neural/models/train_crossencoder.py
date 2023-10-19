@@ -1,4 +1,5 @@
 import pytorch_lightning as pl
+import wandb
 import yaml
 from dotmap import DotMap
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
@@ -13,6 +14,28 @@ if __name__ == "__main__":
     with open("../../config/train/config.yml") as f:
         config = yaml.load(f, Loader=yaml.FullLoader)[config_name]
         config = DotMap(config)
+
+    wandb.init(
+        project="trec-ct-crossencoder",
+        name=f"{config.MODEL_ALIAS}_{config_name}",
+        config={
+            "model_name": config.MODEL_NAME,
+            "train_batch_size": config.TRAIN_BATCH_SIZE,
+            "eval_batch_size": config.EVAL_BATCH_SIZE,
+            "n_train_samples": config.N_TRAIN_SAMPLES,
+            "n_val_samples": config.N_VAL_SAMPLES,
+            "n_test_samples": config.N_TEST_SAMPLES,
+            "fields": config.FIELDS,
+            "query_repr": config.QUERY_REPR,
+            "relevant_labels": config.RELEVANT_LABELS,
+            "irrelevant_labels": config.IRRELEVANT_LABELS,
+            "path_to_run": config.PATH_TO_RUN,
+            "path_to_qrels": config.PATH_TO_QRELS,
+            "path_to_trials_jsonl": config.PATH_TO_TRIALS,
+            "path_to_patients": config.PATH_TO_PATIENTS,
+            "dataset_version": config.DATASET_VERSION,
+        },
+    )
 
     data_module = ClinicalTrialsDataModule(
         model_name=config.MODEL_NAME,
@@ -51,6 +74,7 @@ if __name__ == "__main__":
         optimization_metric=config.TRACK_METRIC,
         evaluator=evaluator,
     )
+    wandb.watch(model)
 
     checkpoint_callback = ModelCheckpoint(
         dirpath=f"../../models/{config.MODEL_ALIAS}/checkpoints",
