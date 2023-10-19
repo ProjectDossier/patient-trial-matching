@@ -1,8 +1,10 @@
 from abc import ABC
 from typing import Optional, List
+
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
-from .BatchProcessing import BatchProcessing
+
+from trec_cds.neural.data.BatchProcessing import BatchProcessing
 
 
 class ClinicalTrialsDataModule(pl.LightningDataModule, ABC):
@@ -11,7 +13,6 @@ class ClinicalTrialsDataModule(pl.LightningDataModule, ABC):
         model_name: str,
         fields: List[str],
         query_repr: str,
-
         path_to_run: str,
         path_to_qrels: str,
         relevant_labels: List[int],
@@ -23,6 +24,8 @@ class ClinicalTrialsDataModule(pl.LightningDataModule, ABC):
         n_test_samples: Optional[int] = None,
         mode: str = "train",
         dataset_version: Optional[str] = None,
+        path_to_trials_jsonl: Optional[str] = None,
+        path_to_patients: Optional[str] = None,
     ):
         """
         :param train_batch_size: number of examples used on each training step
@@ -30,7 +33,7 @@ class ClinicalTrialsDataModule(pl.LightningDataModule, ABC):
         :param n_train_samples: for restricting the number of samples used per epoch
         :param n_val_samples: for restricting the validation to the top n results of each run
         :param n_test_samples: for restricting the evaluation to the top n results of each run
-        :param mode: values["train", "predict_w_labels", "pred_w_no_labels"] required to
+        :param mode: values["train", "predict_w_labels", "predict_w_no_labels"] required to
         define which kind of process the data module is used for.
         """
 
@@ -48,8 +51,9 @@ class ClinicalTrialsDataModule(pl.LightningDataModule, ABC):
             tokenizer_name=model_name,
             path_to_run=path_to_run,
             path_to_qrels=path_to_qrels,
-            dataset_version=dataset_version
-            path_to_qrels=path_to_qrels
+            dataset_version=dataset_version,
+            path_to_trials_jsonl=path_to_trials_jsonl,
+            path_to_patients=path_to_patients,
         )
 
         if mode in ["train"]:
@@ -69,7 +73,7 @@ class ClinicalTrialsDataModule(pl.LightningDataModule, ABC):
             self.train_batch_processing = batch_processing.build_train_batch
             self.eval_batch_processing = batch_processing.build_batch
 
-        elif mode in ["predict_w_labels", "pred_w_no_labels"]:
+        elif mode in ["predict_w_labels", "predict_w_no_labels"]:
             self.data_test = batch_processing.data
             self.pred_batch_size = eval_batch_size
             self.pred_batch_processing = batch_processing.build_batch
@@ -86,7 +90,7 @@ class ClinicalTrialsDataModule(pl.LightningDataModule, ABC):
         return DataLoader(
             self.data_val,
             batch_size=self.eval_batch_size,
-            collate_fn=self.eval_batch_processing
+            collate_fn=self.eval_batch_processing,
         )
 
     def test_dataloader(self):

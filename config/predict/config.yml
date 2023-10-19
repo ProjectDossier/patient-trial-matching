@@ -6,28 +6,7 @@ easy_BIO:
   MODEL_ALIAS: "crossencoder"
   LOGGER_NAME: "crossencoder"
   CHECKPOINT: "best-checkpoint-v4.ckpt"
-  GPUS: [0]
-  MODE: "predict_w_labels"
-  FIELDS: [
-      'conditions',
-      'brief_title',
-      'official_title',
-      'brief_summary',
-      'detailed_description'
-  ]
-  QUERY_REPR: "description"
-  RELEVANT_LABELS: [1, 2]
-  PATH_2_RUN: "../../reports/DoSSIER_2"
-  PATH_2_QRELS: "../../data/raw/2022_qrels_Judgment-of-0-is-non-relevant-2-is-excluded-and-2-is-eligible.txt"
-
-DoSSIER_5_easy:
-  BATCH_SIZE: 256
-  N_SAMPLES: 50
-  MODEL_NAME: seiya/oubiobert-base-uncased
-  MODEL_ALIAS: "BIO_crossencoder"
-  LOGGER_NAME: "BIO_crossencoder"
-  CHECKPOINT: "best-checkpoint.ckpt"
-  GPUS: [0]
+  GPUS: [ 0 ]
   MODE: "predict_w_labels"
   FIELDS: [
     'conditions',
@@ -37,9 +16,34 @@ DoSSIER_5_easy:
     'detailed_description'
   ]
   QUERY_REPR: "description"
-  RELEVANT_LABELS: [1, 2]
-  PATH_2_RUN: "../../reports/DoSSIER_2"
-  PATH_2_QRELS: "../../data/raw/2022_qrels_Judgment-of-0-is-non-relevant-2-is-excluded-and-2-is-eligible.txt"
+  RELEVANT_LABELS: [ 1, 2 ]
+  PATH_TO_RUN: "../../reports/DoSSIER_2"
+  PATH_TO_QRELS: "../../data/external/qrels2022.txt.txt"
+  PATH_TO_TRIALS: "../../data/processed/trials_parsed.jsonl"
+  PATH_TO_PATIENTS: "../../data/processed/patients_parsed.jsonl"
+
+DoSSIER_5_easy:
+  BATCH_SIZE: 256
+  N_SAMPLES: 50
+  MODEL_NAME: seiya/oubiobert-base-uncased
+  MODEL_ALIAS: "BIO_crossencoder"
+  LOGGER_NAME: "BIO_crossencoder"
+  CHECKPOINT: "best-checkpoint.ckpt"
+  GPUS: [ 0 ]
+  MODE: "predict_w_labels"
+  FIELDS: [
+    'conditions',
+    'brief_title',
+    'official_title',
+    'brief_summary',
+    'detailed_description'
+  ]
+  QUERY_REPR: "description"
+  RELEVANT_LABELS: [ 1, 2 ]
+  PATH_TO_RUN: "../../reports/DoSSIER_2"
+  PATH_TO_QRELS: "../../data/external/qrels2022.txt.txt"
+  PATH_TO_TRIALS: "../../data/processed/trials_parsed.jsonl"
+  PATH_TO_PATIENTS: "../../data/processed/patients_parsed.jsonl"
   VERSION: 2022
 
 DoSSIER_5_difficult:
@@ -56,8 +60,10 @@ DoSSIER_5_difficult:
   ]
   QUERY_REPR: "description"
   RELEVANT_LABELS: [ 1, 2 ]
-  PATH_2_RUN: "../../reports/DoSSIER_5_easy"
-  PATH_2_QRELS: "../../data/raw/2022_qrels_Judgment-of-0-is-non-relevant-2-is-excluded-and-2-is-eligible.txt"
+  PATH_TO_RUN: "../../reports/DoSSIER_5_easy"
+  PATH_TO_QRELS: "../../data/external/qrels2022.txt.txt"
+  PATH_TO_TRIALS: "../../data/processed/trials_parsed.jsonl"
+  PATH_TO_PATIENTS: "../../data/processed/patients_parsed.jsonl"
   VERSION: 2022
 
 DoSSIER_mixed:
@@ -74,8 +80,10 @@ DoSSIER_mixed:
   ]
   QUERY_REPR: "description"
   RELEVANT_LABELS: [ 1, 2 ]
-  PATH_2_RUN: "../../reports/easy_BIO"
-  PATH_2_QRELS: "../../data/raw/2022_qrels_Judgment-of-0-is-non-relevant-2-is-excluded-and-2-is-eligible.txt"
+  PATH_TO_RUN: "../../reports/easy_BIO"
+  PATH_TO_QRELS: "../../data/external/qrels2022.txt.txt"
+  PATH_TO_TRIALS: "../../data/processed/trials_parsed.jsonl"
+  PATH_TO_PATIENTS: "../../data/processed/patients_parsed.jsonl"
 
 only_difficult:
   BATCH_SIZE: 256
@@ -91,5 +99,7 @@ only_difficult:
   ]
   QUERY_REPR: "description"
   RELEVANT_LABELS: [ 2 ]
-  PATH_2_RUN: "../../reports/DoSSIER_2"
-  PATH_2_QRELS: "../../data/raw/2022_qrels_Judgment-of-0-is-non-relevant-2-is-excluded-and-2-is-eligible.txt"
+  PATH_TO_RUN: "../../reports/DoSSIER_2"
+  PATH_TO_QRELS: "../../data/external/qrels2022.txt.txt"
+  PATH_TO_TRIALS: "../../data/processed/trials_parsed.jsonl"
+  PATH_TO_PATIENTS: "../../data/processed/patients_parsed.jsonl"

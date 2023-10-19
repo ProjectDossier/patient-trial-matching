@@ -11,7 +11,7 @@ from CTnlp.clinical_trial import ClinicalTrial
 from CTnlp.parsers import parse_clinical_trials_from_folder
 from CTnlp.patient import load_patients_from_xml
 from CTnlp.patient import Patient
-from trec_cds.features.build_features import ClinicalTrialsFeatures
+from trec_cds.lexical.features.build_features import ClinicalTrialsFeatures
 
 
 class Indexer:

@@ -6,8 +6,8 @@ from trec_cds.data.load_data_from_file import load_jsonl
 from trec_cds.data.trec_submission import (
     convert_to_trec_fast,
 )
-from trec_cds.models.postprocessing import create_new_filters, postprocessing
-from trec_cds.models.trec_evaluation import read_bm25, evaluate
+from trec_cds.lexical.models.postprocessing import create_new_filters, postprocessing
+from trec_cds.trec_evaluation import read_bm25, evaluate
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)

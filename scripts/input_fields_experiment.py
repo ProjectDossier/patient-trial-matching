@@ -9,9 +9,9 @@ from tqdm import tqdm
 from CTnlp.parsers import parse_clinical_trials_from_folder
 from CTnlp.patient import Patient
 from CTnlp.patient import load_patients_from_xml
-from trec_cds.features.build_features import ClinicalTrialsFeatures
-from trec_cds.features.index_clinical_trials import Indexer
-from trec_cds.models.trec_evaluation import read_bm25, evaluate
+from trec_cds.lexical.features.build_features import ClinicalTrialsFeatures
+from trec_cds.lexical.features.index_clinical_trials import Indexer
+from trec_cds.trec_evaluation import read_bm25, evaluate
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -44,13 +44,13 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--first_n",
-        default=25000,
+        default=500000,
         type=int,
         help="load only first n clinical trial documents (max is ~370k)",
     )
     parser.add_argument(
         "--return_top_n",
-        default=500,
+        default=1000,
         type=int,
         help="return top n results from retrieval model",
     )

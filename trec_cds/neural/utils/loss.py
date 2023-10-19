@@ -2,10 +2,9 @@ import torch
 from torch import nn
 
 
-class PairwiseHingLoss(nn.Module):
-
+class PairwiseHingeLoss(nn.Module):
     def __init__(self):
-        super(PairwiseHingLoss, self).__init__()
+        super(PairwiseHingeLoss, self).__init__()
 
     def forward(self, model_predictions_positives, model_predictions_negatives):
         loss = 1.0 - (model_predictions_positives - model_predictions_negatives)

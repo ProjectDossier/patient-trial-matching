@@ -1,17 +1,19 @@
-from dotmap import DotMap
 import pytorch_lightning as pl
-from trec_cds.models.crossencoder import CrossEncoder
-from trec_cds.data.ClinicalTrialsDataModule import ClinicalTrialsDataModule
-from pytorch_lightning.loggers import TensorBoardLogger
-from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 import yaml
-from trec_cds.utils.evaluator import Evaluator
+from dotmap import DotMap
+from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
+from pytorch_lightning.loggers import TensorBoardLogger
 
+from trec_cds.neural.data.ClinicalTrialsDataModule import ClinicalTrialsDataModule
+from trec_cds.neural.models.crossencoder import CrossEncoder
+from trec_cds.neural.utils.evaluator import Evaluator
 
 if __name__ == "__main__":
     config_name = "difficult"
     with open("../../config/train/config.yml") as f:
-        config = yaml.load(f, Loader=yaml.FullLoader)[config_name]  # name of the configuration
+        config = yaml.load(f, Loader=yaml.FullLoader)[
+            config_name
+        ]  # name of the configuration
         config = DotMap(config)
 
     data_module = ClinicalTrialsDataModule(
@@ -25,8 +27,10 @@ if __name__ == "__main__":
         query_repr=config.QUERY_REPR,
         relevant_labels=config.RELEVANT_LABELS,
         irrelevant_labels=config.IRRELEVANT_LABELS,
-        path_to_run=config.PATH_2_RUN,
-        path_to_qrels=config.PATH_2_QRELS
+        path_to_run=config.PATH_TO_RUN,
+        path_to_qrels=config.PATH_TO_QRELS,
+        path_to_patients=config.PATH_TO_PATIENTS,
+        path_to_trials_jsonl=config.PATH_TO_TRIALS,
     )
 
     evaluator = Evaluator(
@@ -36,7 +40,7 @@ if __name__ == "__main__":
         run_id=config_name,
         re_rank=True,
         config_name=config_name,
-        qrels_file=config.PATH_2_QRELS,
+        qrels_file=config.PATH_TO_QRELS,
     )
 
     model = CrossEncoder.load_from_checkpoint(
@@ -47,12 +51,12 @@ if __name__ == "__main__":
         n_training_steps=data_module.n_training_steps,
         batch_size=config.TRAIN_BATCH_SIZE,
         optimization_metric=config.TRACK_METRIC,
-        evaluator=evaluator
+        evaluator=evaluator,
     )
 
     logger = TensorBoardLogger(
         save_dir=f"../../reports/{config.MODEL_ALIAS}_pred_logs",
-        name=config.LOGGER_NAME
+        name=config.LOGGER_NAME,
     )
 
     checkpoint_callback = ModelCheckpoint(
@@ -65,28 +69,18 @@ if __name__ == "__main__":
     )
 
     early_stopping_callback = EarlyStopping(
-        monitor=config.TRACK_METRIC,
-        patience=config.PATIENCE,
-        mode="max"
+        monitor=config.TRACK_METRIC, patience=config.PATIENCE, mode="max"
     )
 
     trainer = pl.Trainer(
         logger=logger,
-        callbacks=[
-            early_stopping_callback,
-            checkpoint_callback
-        ],
+        callbacks=[early_stopping_callback, checkpoint_callback],
         max_epochs=config.N_EPOCHS,
         gpus=config.GPUS,
         accumulate_grad_batches=config.ACCUM_ITER,
-        check_val_every_n_epoch=config.EVAL_EVERY_N_EPOCH
+        check_val_every_n_epoch=config.EVAL_EVERY_N_EPOCH,
     )
 
-    trainer.fit(
-        model=model,
-        datamodule=data_module
-    )
+    trainer.fit(model=model, datamodule=data_module)
 
-    trainer.test(
-        dataloaders=data_module.test_dataloader()
-    )
+    trainer.test(dataloaders=data_module.test_dataloader())

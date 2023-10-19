@@ -1,12 +1,16 @@
-import pandas as pd
 import random
-from transformers import AutoTokenizer
 from typing import Dict, List, Optional
-from trec_cds.data.redis_instance import RedisInstance, MockupInstance
+
+import pandas as pd
 import redis
+from transformers import AutoTokenizer
+
+from trec_cds.neural.data.redis_instance import RedisInstance, MockupInstance
 
 
 class BatchProcessing:
+    data = None  # used for predict_w_no_labels
+
     def __init__(
         self,
         fields: List[str],
@@ -23,6 +27,8 @@ class BatchProcessing:
         n_val_samples: Optional[int] = None,
         n_test_samples: Optional[int] = None,
         dataset_version: Optional[str] = None,
+        path_to_trials_jsonl: Optional[str] = None,
+        path_to_patients: Optional[str] = None,
     ):
 
         self.train_batch_size = train_batch_size
@@ -42,13 +48,16 @@ class BatchProcessing:
             dataset_version = "2021"
         self.dataset_version = dataset_version
 
-
         random.seed(r_seed)
 
         try:
             self.db = RedisInstance()
-        except redis.exceptions.ConnectionError:
-            self.db = MockupInstance()
+        except (redis.exceptions.ConnectionError, redis.exceptions.TimeoutError):
+            self.db = MockupInstance(
+                parsed_trials_jsonl=path_to_trials_jsonl,
+                path_to_patients=path_to_patients,
+                dataset_version=self.dataset_version,
+            )
 
         self.load_data()
 
@@ -57,17 +66,9 @@ class BatchProcessing:
         data = pd.read_csv(
             self.path_to_run,
             header=None,
-            names=[
-                "qid",
-                "Q0",
-                "docno",
-                "rank",
-                "score",
-                "run_id"
-            ],
+            names=["qid", "Q0", "docno", "rank", "score", "run_id"],
             converters={"qid": str},
-
-            sep="\t"  # fixme: there was ' ' in some cases?
+            sep=" ",  # fixme: there was ' ' or '\t' in some cases?
         )
 
         if self.mode != "predict_w_no_labels":
@@ -81,16 +82,9 @@ class BatchProcessing:
                     "label",
                 ],
                 converters={"qid": str},
-                sep=" "
+                sep=" ",
             )
-            data = data.merge(
-                qrels,
-                on=[
-                    "qid",
-                    "docno"
-                ],
-                how="left"
-            )
+            data = data.merge(qrels, on=["qid", "docno"], how="left")
 
             self.reference_run = data.copy()
 
@@ -100,7 +94,6 @@ class BatchProcessing:
                         self.irrelevant_labels + self.relevant_labels
                     )
                 ]
-
 
             data = data.fillna(0)
             if self.mode == "train":
@@ -112,7 +105,7 @@ class BatchProcessing:
                 n_test = len(qids) - (n_train + n_val)
 
                 qids_train = qids[:n_train]
-                qids_val = qids[n_train: n_train + n_val]
+                qids_val = qids[n_train : n_train + n_val]
                 qids_test = qids[-n_test:]
 
                 data_train = data[data.qid.isin(qids_train)].copy()
@@ -123,27 +116,32 @@ class BatchProcessing:
                 data_val = data[data.qid.isin(qids_val)].copy()
                 self.data_val = data_val[["qid", "docno"]].values.tolist()
                 if self.n_val_samples is not None:
-                    self.data_val = truncate_rank(qids_val, self.data_val, self.n_val_samples)
+                    self.data_val = truncate_rank(
+                        qids_val, self.data_val, self.n_val_samples
+                    )
 
                 data_test = data[data.qid.isin(qids_test)].copy()
                 self.data_test = data_test[["qid", "docno"]].values.tolist()
                 if self.n_test_samples is not None:
-                    self.data_test = truncate_rank(qids_test, self.data_test, self.n_test_samples)
+                    self.data_test = truncate_rank(
+                        qids_test, self.data_test, self.n_test_samples
+                    )
 
-            self.data = data[["qid", "docno"]].values.tolist()
-            if self.n_test_samples is not None:
-                self.data = truncate_rank(data.qid.unique(), self.data, self.n_test_samples)
+        self.data = data[["qid", "docno"]].values.tolist()
+        if self.n_test_samples is not None:
+            self.data = truncate_rank(
+                data.qid.unique(), self.data, self.n_test_samples
+            )
 
     def tokenize_samples(self, texts):
         tokenizer = AutoTokenizer.from_pretrained(
-            self.tokenizer_name,
-            model_max_length=512
+            self.tokenizer_name, model_max_length=512
         )
 
         tokenized_text = tokenizer.batch_encode_plus(
             texts,
             padding=True,
-            truncation='only_second',
+            truncation="only_second",
             return_tensors="pt",
             add_special_tokens=True,
             return_token_type_ids=True,
@@ -155,11 +153,7 @@ class BatchProcessing:
         qids = [i[0] for i in sample_ids]
         unique_qids = list(set(qids))
         topics = self.db.get_topics(
-            qids=unique_qids,
-            version=self.dataset_version,
-            fields=[self.query_repr]
-            unique_qids,
-            [self.query_repr]
+            qids=unique_qids, version=self.dataset_version, fields=[self.query_repr]
         )
 
         topics_dict = {}
@@ -168,10 +162,7 @@ class BatchProcessing:
 
         docnos = [i[1] for i in sample_ids]
         unique_docnos = list(set(docnos))
-        docs = self.db.get_docs(
-            unique_docnos,
-            self.fields
-        )
+        docs = self.db.get_docs(unique_docnos, self.fields)
 
         docs_dict = {}
         for docno, doc in zip(unique_docnos, docs):
@@ -182,17 +173,10 @@ class BatchProcessing:
             query = topics_dict[qid][self.query_repr]
             doc = docs_dict[docno]
             doc = " ".join(
-                flatten_list(
-                    [doc[i] for i in self.fields if doc[i] is not None]
-                )
+                flatten_list([doc[i] for i in self.fields if doc[i] is not None])
             )
 
-            sample_texts.append(
-                [
-                    query,
-                    doc
-                ]
-            )
+            sample_texts.append([query, doc])
 
         batch = self.tokenize_samples(sample_texts)
         return batch, qids, docnos
@@ -208,8 +192,8 @@ class BatchProcessing:
         negatives = []
         for qid, docno in positives:
             negative_list = run[
-                                (run.qid == qid) & (run.label.isin(self.irrelevant_labels))
-                                ].docno.values.tolist()[0:100]
+                (run.qid == qid) & (run.label.isin(self.irrelevant_labels))
+            ].docno.values.tolist()[0:100]
             random.shuffle(negative_list)
             negatives.append([qid, negative_list[0]])
 
