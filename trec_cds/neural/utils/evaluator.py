@@ -215,7 +215,7 @@ class Evaluator:
     def write_run(self, run, n_queries=50):
         run["Q0"] = "Q0"
         run["run_id"] = self.run_id
-        run["rank"] = list(range(1, 51)) * n_queries  # Fixme: will fail if reranking more than 50 docs
+        run["rank"] = run.groupby("query_id")["score"].rank("dense", ascending=False)
         run[["query_id", "Q0", "doc_id", "rank", "score", "run_id"]].to_csv(
             f"{self.output_path}/{self.run_id}", index=False, sep=" ", header=False
         )
